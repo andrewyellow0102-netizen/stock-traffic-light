@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>股票紅綠燈</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: { bg: '#0d1117', card: '#161b22', border: '#30363d' },
+                        green: '#00c853', yellow: '#ffab00', red: '#ff1744',
+                        accent: '#00e676',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #0d1117; color: #e6edf3; font-family: 'Segoe UI', sans-serif; }
+        .light-green { box-shadow: 0 0 20px rgba(0, 200, 83, 0.5); }
+        .light-yellow { box-shadow: 0 0 20px rgba(255, 171, 0, 0.5); }
+        .light-red { box-shadow: 0 0 20px rgba(255, 23, 68, 0.5); }
+        .ticker-input:focus { outline: none; box-shadow: 0 0 0 2px #00e676; }
+        .ticker-input { background: #161b22; border: 2px solid #30363d; color: #e6edf3; }
+        .ticker-input::placeholder { color: #6e7681; }
+        .card { background: #161b22; border: 1px solid #30363d; }
+        .btn-accent { background: #00e676; color: #0d1117; font-weight: 700; }
+        .btn-accent:hover { background: #00d060; }
+        .hidden { display: none; }
+        .fade-in { animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Header -->
+    <header class="border-b border-dark-border py-4 px-6">
+        <div class="max-w-2xl mx-auto flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-accent/20 flex items-center-center justify-center text-2xl">🚦</div>
+            <div>
+                <h1 class="text-xl font-bold text-accent">股票紅綠燈</h1>
+                <p class="text-xs text-gray-400">輸入股號，快速判斷進場時機</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-2xl mx-auto px-4 py-8">
+        <!-- 查詢區 -->
+        <div class="card rounded-2xl p-6 mb-6">
+            <label class="block text-sm text-gray-400 mb-2">輸入股號</label>
+            <div class="flex gap-3">
+                <input type="text" id="stockCode" placeholder="例如：2330" maxlength="6"
+                    class="ticker-input flex-1 px-4 py-3 rounded-xl text-lg font-mono tracking-wider text-center"
+                    onkeypress="if(event.key==='Enter')searchStock()">
+                <button onclick="searchStock()" id="searchBtn"
+                    class="btn-accent px-8 py-3 rounded-xl text-lg font-bold transition">
+                    查詢
+                </button>
+            </div>
+            <p id="inputError" class="text-red text-sm mt-2 hidden">請輸入正確的股號（4-6位數字）</p>
+        </div>
+
+        <!-- 載入中 -->
+        <div id="loadingState" class="card rounded-2xl p-8 text-center hidden">
+            <div class="text-4xl mb-3 animate-spin">⚙️</div>
+            <p class="text-gray-400">讀取中...</p>
+        </div>
+
+        <!-- 結果卡片 -->
+        <div id="resultCard" class="card rounded-2xl p-6 hidden fade-in">
+            <!-- 股票名稱 + 價格 -->
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <span id="stockName" class="text-2xl font-bold">--</span>
+                    <span id="stockCodeDisplay" class="text-gray-400 ml-2 text-lg">--</span>
+                </div>
+                <div class="text-right">
+                    <div id="stockPrice" class="text-3xl font-bold text-accent">--</div>
+                    <div id="priceChange" class="text-sm text-gray-400">--</div>
+                </div>
+            </div>
+
+            <!-- 燈號 -->
+            <div class="flex items-center justify-center gap-6 my-6">
+                <div id="lightIndicator" class="w-24 h-24 rounded-full bg-dark-border flex items-center justify-center text-4xl transition">
+                    ?
+                </div>
+                <div>
+                    <div id="lightLabel" class="text-2xl font-bold">--</div>
+                    <div id="lightDesc" class="text-sm text-gray-400 mt-1">--</div>
+                </div>
+            </div>
+
+            <!-- 技術指標 -->
+            <div id="indicatorsSection" class="border-t border-dark-border pt-4 mt-4 hidden">
+                <p class="text-sm text-gray-400 mb-3">技術指標</p>
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="text-center p-3 rounded-xl" style="background:#1c2128">
+                        <div class="text-xs text-gray-400">RSI(14)</div>
+                        <div id="rsiValue" class="text-xl font-bold">--</div>
+                    </div>
+                    <div class="text-center p-3 rounded-xl" style="background:#1c2128">
+                        <div class="text-xs text-gray-400">KD K值</div>
+                        <div id="kdKValue" class="text-xl font-bold">--</div>
+                    </div>
+                    <div class="text-center p-3 rounded-xl" style="background:#1c2128">
+                        <div class="text-xs text-gray-400">MA20</div>
+                        <div id="ma20Value" class="text-xl font-bold">--</div>
+                    </div>
+                </div>
+                <div id="reasonText" class="mt-4 p-3 rounded-xl text-sm" style="background:#1c2128">
+                    <span class="text-gray-400">訊號原因：</span>
+                    <span id="signalReason" class="text-accent">--</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 錯誤訊息 -->
+        <div id="errorCard" class="card rounded-2xl p-6 text-center hidden">
+            <div class="text-4xl mb-3">❌</div>
+            <p id="errorMessage" class="text-gray-300">--</p>
+        </div>
+
+        <!-- 燈號說明 -->
+        <div class="mt-8 text-center text-sm text-gray-500">
+            <p>🟢 綠燈 = 買進（超跌/超賣）&nbsp;&nbsp; 🟡 黃燈 = 觀望&nbsp;&nbsp; 🔴 紅燈 = 賣出（超漲/超買）</p>
+        </div>
+    </main>
+
+    <script>
+        const STOCK_CODE_REGEX = /^\d{4,6}$/;
+
+        async function searchStock() {
+            const code = document.getElementById('stockCode').value.trim();
+            const errorEl = document.getElementById('inputError');
+            const resultEl = document.getElementById('resultCard');
+            const loadingEl = document.getElementById('loadingState');
+            const errorResultEl = document.getElementById('errorCard');
+
+            if (!STOCK_CODE_REGEX.test(code)) {
+                errorEl.classList.remove('hidden');
+                resultEl.classList.add('hidden');
+                errorResultEl.classList.add('hidden');
+                return;
+            }
+            errorEl.classList.add('hidden');
+
+            // Show loading, hide others
+            loadingEl.classList.remove('hidden');
+            resultEl.classList.add('hidden');
+            errorResultEl.classList.add('hidden');
+
+            try {
+                const resp = await fetch(`/api/stock?code=${code}`);
+                if (!resp.ok) {
+                    const err = await resp.json();
+                    throw new Error(err.detail || '查詢失敗');
+                }
+                const data = await resp.json();
+                displayResult(data);
+            } catch (e) {
+                showError(e.message);
+            } finally {
+                loadingEl.classList.add('hidden');
+            }
+        }
+
+        function displayResult(data) {
+            const resultEl = document.getElementById('resultCard');
+            const errorResultEl = document.getElementById('errorCard');
+            errorResultEl.classList.add('hidden');
+
+            document.getElementById('stockName').textContent = data.name;
+            document.getElementById('stockCodeDisplay').textContent = data.code;
+            document.getElementById('stockPrice').textContent = `${data.price} 元`;
+            document.getElementById('priceChange').textContent = data.change || '';
+
+            const light = data.light; // 'green' | 'yellow' | 'red'
+            const lightEl = document.getElementById('lightIndicator');
+            const lightLabel = document.getElementById('lightLabel');
+            const lightDesc = document.getElementById('lightDesc');
+
+            lightEl.textContent = light === 'green' ? '🟢' : light === 'yellow' ? '🟡' : '🔴';
+            lightLabel.textContent = light === 'green' ? '買進' : light === 'yellow' ? '觀望' : '賣出';
+
+            if (light === 'green') {
+                lightEl.className = 'w-24 h-24 rounded-full bg-green/20 flex items-center justify-center text-4xl light-green';
+                lightLabel.className = 'text-2xl font-bold text-green';
+            } else if (light === 'yellow') {
+                lightEl.className = 'w-24 h-24 rounded-full bg-yellow/20 flex items-center justify-center text-4xl light-yellow';
+                lightLabel.className = 'text-2xl font-bold text-yellow';
+            } else {
+                lightEl.className = 'w-24 h-24 rounded-full bg-red/20 flex items-center justify-center text-4xl light-red';
+                lightLabel.className = 'text-2xl font-bold text-red';
+            }
+            lightDesc.textContent = data.signal_description || '';
+
+            // Indicators
+            if (data.indicators) {
+                document.getElementById('indicatorsSection').classList.remove('hidden');
+                document.getElementById('rsiValue').textContent = data.indicators.rsi?.toFixed(1) || '--';
+                document.getElementById('kdKValue').textContent = data.indicators.kd_k?.toFixed(1) || '--';
+                document.getElementById('ma20Value').textContent = data.indicators.ma20 ? `${data.indicators.ma20.toFixed(1)}` : '--';
+                document.getElementById('signalReason').textContent = data.signal_description || '--';
+            }
+
+            resultEl.classList.remove('hidden');
+            resultEl.classList.add('fade-in');
+        }
+
+        function showError(msg) {
+            const resultEl = document.getElementById('resultCard');
+            const errorResultEl = document.getElementById('errorCard');
+            resultEl.classList.add('hidden');
+            document.getElementById('errorMessage').textContent = msg;
+            errorResultEl.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
