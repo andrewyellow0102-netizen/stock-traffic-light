@@ -3,49 +3,38 @@ Stock service: fetch data via yfinance and calculate indicators
 """
 import yfinance as yf
 import pandas as pd
-from typing import Optional, List
+from typing import Optional
+
 from app.services.indicator import calculate_rsi, calculate_kd, calculate_ma
-
-
-# Taiwan stock suffix mapping (yfinance uses .TW for Taiwan)
-TW_SUFFIXES = ['.TW', '.TWO']  # TW = TAIEX, TWO = OTC
-
-
-def _get_ticker(code: str):
-    """Get yfinance ticker, trying .TW then .TWO"""
-    for suffix in TW_SUFFIXES:
-        ticker = yf.Ticker(f"{code}{suffix}")
-        try:
-            # Test if this ticker has data
-            info = ticker.fast_info
-            return ticker
-        except Exception:
-            continue
-    # Fallback: just use .TW
-    return yf.Ticker(f"{code}.TW")
 
 
 def fetch_stock_data(code: str, period: str = "3mo") -> Optional[dict]:
     """
     Fetch stock data from yfinance.
+    Tries .TW (TAIEX) first, then .TWO (OTC).
     Returns dict with price info + raw DataFrame for indicator calculation.
     Returns None if stock not found.
     """
-    ticker = _get_ticker(code)
-    
-    try:
-        hist = ticker.history(period=period, auto_adjust=True)
-    except Exception:
+    # Try .TW first, then .TWO
+    suffixes = ['.TW', '.TWO']
+    ticker = None
+    used_suffix = None
+
+    for suffix in suffixes:
+        t = yf.Ticker(f"{code}{suffix}")
+        try:
+            # Check if this ticker actually has price data
+            h = t.history(period=period, auto_adjust=True, raise_errors=True)
+            if h is not None and not h.empty and len(h) >= 5:
+                ticker = t
+                used_suffix = suffix
+                hist = h
+                break
+        except Exception:
+            continue
+
+    if ticker is None:
         return None
-    
-    if hist.empty or len(hist) < 30:
-        return None
-    
-    info = {}
-    try:
-        info = ticker.fast_info
-    except Exception:
-        pass
     
     # Current price
     current_price = float(hist['Close'].iloc[-1])

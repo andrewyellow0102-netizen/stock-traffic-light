@@ -29,16 +29,25 @@
         .card { background: #161b22; border: 1px solid #30363d; }
         .btn-accent { background: #00e676; color: #0d1117; font-weight: 700; }
         .btn-accent:hover { background: #00d060; }
+        .filter-btn { background: #21262d; color: #8b949e; border: 1px solid #30363d; transition: all 0.2s; }
+        .filter-btn:hover { border-color: #00e676; color: #e6edf3; }
+        .filter-btn.active { background: #00e676; color: #0d1117; border-color: #00e676; font-weight: 700; }
+        .stock-card { background: #161b22; border: 1px solid #30363d; transition: all 0.2s; cursor: pointer; }
+        .stock-card:hover { border-color: #00e676; transform: translateY(-2px); }
         .hidden { display: none; }
         .fade-in { animation: fadeIn 0.3s ease-in; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .light-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+        .light-dot.green { background: #00c853; box-shadow: 0 0 6px rgba(0,200,83,0.8); }
+        .light-dot.yellow { background: #ffab00; box-shadow: 0 0 6px rgba(255,171,0,0.8); }
+        .light-dot.red { background: #ff1744; box-shadow: 0 0 6px rgba(255,23,68,0.8); }
     </style>
 </head>
 <body class="min-h-screen">
     <!-- Header -->
-    <header class="border-b border-dark-border py-4 px-6">
+    <header class="border-b border-dark-border py-4 px-6 sticky top-0 z-10" style="background:#0d1117ee;backdrop-filter:blur(8px)">
         <div class="max-w-2xl mx-auto flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-accent/20 flex items-center-center justify-center text-2xl">🚦</div>
+            <div class="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center text-2xl">🚦</div>
             <div>
                 <h1 class="text-xl font-bold text-accent">股票紅綠燈</h1>
                 <p class="text-xs text-gray-400">輸入股號，快速判斷進場時機</p>
@@ -46,9 +55,10 @@
         </div>
     </header>
 
-    <main class="max-w-2xl mx-auto px-4 py-8">
+    <main class="max-w-2xl mx-auto px-4 py-6">
+
         <!-- 查詢區 -->
-        <div class="card rounded-2xl p-6 mb-6">
+        <div class="card rounded-2xl p-6 mb-5">
             <label class="block text-sm text-gray-400 mb-2">輸入股號</label>
             <div class="flex gap-3">
                 <input type="text" id="stockCode" placeholder="例如：2330" maxlength="6"
@@ -69,8 +79,7 @@
         </div>
 
         <!-- 結果卡片 -->
-        <div id="resultCard" class="card rounded-2xl p-6 hidden fade-in">
-            <!-- 股票名稱 + 價格 -->
+        <div id="resultCard" class="card rounded-2xl p-6 mb-5 hidden fade-in">
             <div class="flex items-center justify-between mb-4">
                 <div>
                     <span id="stockName" class="text-2xl font-bold">--</span>
@@ -82,9 +91,8 @@
                 </div>
             </div>
 
-            <!-- 燈號 -->
-            <div class="flex items-center justify-center gap-6 my-6">
-                <div id="lightIndicator" class="w-24 h-24 rounded-full bg-dark-border flex items-center justify-center text-4xl transition">
+            <div class="flex items-center justify-center gap-6 my-5">
+                <div id="lightIndicator" class="w-20 h-20 rounded-full bg-dark-border flex items-center justify-center text-3xl transition">
                     ?
                 </div>
                 <div>
@@ -93,10 +101,9 @@
                 </div>
             </div>
 
-            <!-- 技術指標 -->
             <div id="indicatorsSection" class="border-t border-dark-border pt-4 mt-4 hidden">
                 <p class="text-sm text-gray-400 mb-3">技術指標</p>
-                <div class="grid grid-cols-3 gap-4">
+                <div class="grid grid-cols-3 gap-3">
                     <div class="text-center p-3 rounded-xl" style="background:#1c2128">
                         <div class="text-xs text-gray-400">RSI(14)</div>
                         <div id="rsiValue" class="text-xl font-bold">--</div>
@@ -114,6 +121,11 @@
                     <span class="text-gray-400">訊號原因：</span>
                     <span id="signalReason" class="text-accent">--</span>
                 </div>
+                <div class="mt-3 text-center">
+                    <button onclick="addToWatchlist()" class="text-sm text-gray-400 hover:text-accent transition border border-dark-border px-4 py-2 rounded-lg">
+                        ★ 加入自選
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -121,6 +133,33 @@
         <div id="errorCard" class="card rounded-2xl p-6 text-center hidden">
             <div class="text-4xl mb-3">❌</div>
             <p id="errorMessage" class="text-gray-300">--</p>
+        </div>
+
+        <!-- ====== 燈號股票列表（S lice 3） ====== -->
+        <div id="watchlistSection" class="mt-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-bold text-gray-200">🔥 熱門股票</h2>
+                <div class="flex gap-2">
+                    <button onclick="setFilter('all')" id="filterAll" class="filter-btn px-4 py-1.5 rounded-full text-sm active">全部</button>
+                    <button onclick="setFilter('green')" id="filterGreen" class="filter-btn px-4 py-1.5 rounded-full text-sm">🟢 買進</button>
+                    <button onclick="setFilter('red')" id="filterRed" class="filter-btn px-4 py-1.5 rounded-full text-sm">🔴 賣出</button>
+                </div>
+            </div>
+
+            <!-- Watchlist loading -->
+            <div id="watchlistLoading" class="text-center py-8 text-gray-500 text-sm">
+                載入中...
+            </div>
+
+            <!-- Stock grid -->
+            <div id="stockGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            </div>
+
+            <!-- Empty state -->
+            <div id="watchlistEmpty" class="text-center py-8 text-gray-500 hidden">
+                <div class="text-3xl mb-2">🔍</div>
+                <p>目前沒有符合條件的股票</p>
+            </div>
         </div>
 
         <!-- 燈號說明 -->
@@ -131,7 +170,10 @@
 
     <script>
         const STOCK_CODE_REGEX = /^\d{4,6}$/;
+        let currentFilter = 'all';
+        let watchlistData = [];
 
+        // ──── 查詢個股 ────
         async function searchStock() {
             const code = document.getElementById('stockCode').value.trim();
             const errorEl = document.getElementById('inputError');
@@ -147,7 +189,6 @@
             }
             errorEl.classList.add('hidden');
 
-            // Show loading, hide others
             loadingEl.classList.remove('hidden');
             resultEl.classList.add('hidden');
             errorResultEl.classList.add('hidden');
@@ -167,6 +208,7 @@
             }
         }
 
+        // ──── 顯示查詢結果 ────
         function displayResult(data) {
             const resultEl = document.getElementById('resultCard');
             const errorResultEl = document.getElementById('errorCard');
@@ -177,37 +219,37 @@
             document.getElementById('stockPrice').textContent = `${data.price} 元`;
             document.getElementById('priceChange').textContent = data.change || '';
 
-            const light = data.light; // 'green' | 'yellow' | 'red'
+            const light = data.light;
             const lightEl = document.getElementById('lightIndicator');
             const lightLabel = document.getElementById('lightLabel');
             const lightDesc = document.getElementById('lightDesc');
 
             lightEl.textContent = light === 'green' ? '🟢' : light === 'yellow' ? '🟡' : '🔴';
-            lightLabel.textContent = light === 'green' ? '買進' : light === 'yellow' ? '觀望' : '賣出';
+            lightLabel.textContent = data.light_label || (light === 'green' ? '買進' : light === 'yellow' ? '觀望' : '賣出');
+            lightDesc.textContent = data.light_description || '';
 
             if (light === 'green') {
-                lightEl.className = 'w-24 h-24 rounded-full bg-green/20 flex items-center justify-center text-4xl light-green';
+                lightEl.className = 'w-20 h-20 rounded-full bg-green/20 flex items-center justify-center text-3xl light-green';
                 lightLabel.className = 'text-2xl font-bold text-green';
             } else if (light === 'yellow') {
-                lightEl.className = 'w-24 h-24 rounded-full bg-yellow/20 flex items-center justify-center text-4xl light-yellow';
+                lightEl.className = 'w-20 h-20 rounded-full bg-yellow/20 flex items-center justify-center text-3xl light-yellow';
                 lightLabel.className = 'text-2xl font-bold text-yellow';
             } else {
-                lightEl.className = 'w-24 h-24 rounded-full bg-red/20 flex items-center justify-center text-4xl light-red';
+                lightEl.className = 'w-20 h-20 rounded-full bg-red/20 flex items-center justify-center text-3xl light-red';
                 lightLabel.className = 'text-2xl font-bold text-red';
             }
-            lightDesc.textContent = data.signal_description || '';
 
-            // Indicators
             if (data.indicators) {
                 document.getElementById('indicatorsSection').classList.remove('hidden');
-                document.getElementById('rsiValue').textContent = data.indicators.rsi?.toFixed(1) || '--';
-                document.getElementById('kdKValue').textContent = data.indicators.kd_k?.toFixed(1) || '--';
-                document.getElementById('ma20Value').textContent = data.indicators.ma20 ? `${data.indicators.ma20.toFixed(1)}` : '--';
+                document.getElementById('rsiValue').textContent = data.indicators.rsi != null ? data.indicators.rsi.toFixed(1) : '--';
+                document.getElementById('kdKValue').textContent = data.indicators.kd_k != null ? data.indicators.kd_k.toFixed(1) : '--';
+                document.getElementById('ma20Value').textContent = data.indicators.ma20 != null ? data.indicators.ma20.toFixed(1) : '--';
                 document.getElementById('signalReason').textContent = data.signal_description || '--';
             }
 
+            // Scroll to result
             resultEl.classList.remove('hidden');
-            resultEl.classList.add('fade-in');
+            resultEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
 
         function showError(msg) {
@@ -217,6 +259,143 @@
             document.getElementById('errorMessage').textContent = msg;
             errorResultEl.classList.remove('hidden');
         }
+
+        // ──── Toast 通知 ────
+        function showToast(msg, color) {
+            const existing = document.getElementById('toastMsg');
+            if (existing) existing.remove();
+            const toast = document.createElement('div');
+            toast.id = 'toastMsg';
+            toast.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 px-6 py-3 rounded-xl text-white font-bold shadow-lg z-50 text-sm';
+            toast.style.background = color === 'green' ? '#00c853' : color === 'red' ? '#ff1744' : '#ffab00';
+            toast.style.color = '#0d1117';
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2500);
+        }
+
+        // ──── 加入自選 ────
+        function addToWatchlist() {
+            const codeEl = document.getElementById('stockCodeDisplay');
+            const nameEl = document.getElementById('stockName');
+            const priceEl = document.getElementById('stockPrice');
+            const lightEl = document.getElementById('lightIndicator');
+
+            if (!codeEl || !nameEl || !priceEl || !lightEl) {
+                showToast('請先查詢股票', 'red');
+                return;
+            }
+
+            const code = String(codeEl.textContent || '').trim();
+            const name = String(nameEl.textContent || '').trim();
+            const price = String(priceEl.textContent || '').trim();
+            const lightText = String(lightEl.textContent || '').trim();
+            const light = lightText.includes('🟢') ? 'green' : lightText.includes('🔴') ? 'red' : 'yellow';
+
+            if (!code || code === '--') {
+                showToast('請先查詢股票', 'red');
+                return;
+            }
+
+            let myList = [];
+            try {
+                myList = JSON.parse(localStorage.getItem('myStocks') || '[]');
+            } catch (e) { myList = []; }
+
+            if (myList.find(s => String(s.code) === code)) {
+                showToast('已在自選名單中', 'yellow');
+                return;
+            }
+
+            myList.unshift({ code, name, price, light });
+            localStorage.setItem('myStocks', JSON.stringify(myList));
+            showToast('已加入自選 ★', 'green');
+        }
+
+        // ──── 燈號股票列表 ────
+        async function loadWatchlist() {
+            const grid = document.getElementById('stockGrid');
+            const loading = document.getElementById('watchlistLoading');
+            const empty = document.getElementById('watchlistEmpty');
+
+            loading.classList.remove('hidden');
+            empty.classList.add('hidden');
+            grid.innerHTML = '';
+
+            try {
+                const resp = await fetch('/api/watchlist');
+                const data = await resp.json();
+                watchlistData = data.stocks || [];
+                renderWatchlist();
+            } catch (e) {
+                grid.innerHTML = `<p class="text-gray-500 col-span-2 text-center py-4">載入失敗：${e.message}</p>`;
+            } finally {
+                loading.classList.add('hidden');
+            }
+        }
+
+        function renderWatchlist() {
+            const grid = document.getElementById('stockGrid');
+            const empty = document.getElementById('watchlistEmpty');
+
+            const filtered = currentFilter === 'all'
+                ? watchlistData
+                : watchlistData.filter(s => s.light === currentFilter);
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '';
+                empty.classList.remove('hidden');
+                return;
+            }
+
+            empty.classList.add('hidden');
+            grid.innerHTML = filtered.map(stock => {
+                const lightColor = stock.light === 'green' ? 'text-green' : stock.light === 'red' ? 'text-red' : 'text-yellow';
+                const lightEmoji = stock.light === 'green' ? '🟢' : stock.light === 'red' ? '🔴' : '🟡';
+                const lightText = stock.light === 'green' ? '買進' : stock.light === 'red' ? '賣出' : '觀望';
+                const changeText = stock.change || '';
+
+                return `
+                <div class="stock-card rounded-xl p-4" onclick="selectStock('${stock.code}')">
+                    <div class="flex items-start justify-between mb-2">
+                        <div>
+                            <span class="font-bold text-gray-200">${stock.code}</span>
+                            <span class="text-gray-400 text-sm ml-2">${stock.name.length > 12 ? stock.name.substring(0, 12) + '...' : stock.name}</span>
+                        </div>
+                        <span class="${lightColor} text-sm font-bold whitespace-nowrap">${lightEmoji} ${lightText}</span>
+                    </div>
+                    <div class="flex items-end justify-between">
+                        <div>
+                            <span class="text-xl font-bold text-accent">${stock.price}</span>
+                            <span class="text-gray-400 text-xs ml-1">元</span>
+                        </div>
+                        <span class="text-xs text-gray-500">${changeText}</span>
+                    </div>
+                    ${stock.indicators ? `
+                    <div class="flex gap-4 mt-2 text-xs text-gray-500">
+                        <span>RSI: ${stock.indicators.rsi != null ? stock.indicators.rsi.toFixed(1) : '--'}</span>
+                        <span>K: ${stock.indicators.kd_k != null ? stock.indicators.kd_k.toFixed(1) : '--'}</span>
+                    </div>` : ''}
+                </div>`;
+            }).join('');
+        }
+
+        function setFilter(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('filter' + filter.charAt(0).toUpperCase() + filter.slice(1)).classList.add('active');
+            renderWatchlist();
+        }
+
+        function selectStock(code) {
+            document.getElementById('stockCode').value = code;
+            searchStock();
+        }
+
+        // Load watchlist on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadWatchlist();
+        });
     </script>
 </body>
 </html>
