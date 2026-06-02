@@ -319,6 +319,9 @@
         let currentFilter = 'all';
         let watchlistData = [];
 
+        // ──── 格式化股價：固定小數點第二位 ────
+        const fmt = (v) => v != null ? Number(v).toFixed(2) : '--';
+
         // ──── 查詢個股 ────
         async function searchStock() {
             const code = document.getElementById('stockCode').value.trim();
@@ -362,7 +365,7 @@
 
             document.getElementById('stockName').textContent = data.name;
             document.getElementById('stockCodeDisplay').textContent = data.code;
-            document.getElementById('stockPrice').textContent = `${data.price} 元`;
+            document.getElementById('stockPrice').textContent = `${fmt(data.price)} 元`;
             document.getElementById('priceChange').textContent = data.change || '';
 
             const light = data.light;
@@ -617,7 +620,7 @@
                     </div>
                     <div class="flex items-end justify-between">
                         <div>
-                            <span class="text-xl font-bold text-accent">${stock.price}</span>
+                            <span class="text-xl font-bold text-accent">${fmt(stock.price)}</span>
                             <span class="text-gray-400 text-xs ml-1">元</span>
                         </div>
                         <span class="text-xs text-gray-500">${changeText}</span>
@@ -700,7 +703,7 @@
                             </div>
                             <div class="flex items-center gap-3">
                                 <div class="text-right">
-                                    <div class="text-sm font-bold text-accent">${stock.price} 元</div>
+                                    <div class="text-sm font-bold text-accent">${fmt(stock.price)} 元</div>
                                     <div class="text-xs text-gray-500">${stock.change || ''}</div>
                                 </div>
                                 <div class="text-center">
@@ -770,7 +773,7 @@
                     <div class="flex items-center gap-3">
                         <span class="${lightColor} text-xs font-bold">${lightEmoji}</span>
                         <div class="text-right">
-                            <span class="text-sm font-bold text-accent">${stock.price}</span>
+                            <span class="text-sm font-bold text-accent">${fmt(stock.price)}</span>
                             ${stock.change ? `<span class="text-xs text-gray-500 ml-1">${stock.change}</span>` : ''}
                         </div>
                         <button onclick="event.stopPropagation(); removeFromMyStocks('${stock.code}')"
