@@ -409,8 +409,8 @@
             searchStock();
         }
 
-        // ──── 我的自選股（localStorage）─────
-        function renderMyStocks() {
+        // ──── 我的自選股（localStorage + 即時報價）─────
+        async function renderMyStocks() {
             let myList = [];
             try {
                 myList = JSON.parse(localStorage.getItem('myStocks') || '[]');
@@ -430,7 +430,24 @@
             emptyEl.classList.add('hidden');
             clearBtn.classList.remove('hidden');
 
-            listEl.innerHTML = myList.map(stock => {
+            // 即時更新每檔股票的報價
+            const updated = await Promise.all(myList.map(async (stock) => {
+                try {
+                    const resp = await fetch(`/api/stock?code=${stock.code}`);
+                    if (!resp.ok) return stock;
+                    const fresh = await resp.json();
+                    return {
+                        ...stock,
+                        price: typeof fresh.price === 'number' ? fresh.price.toFixed(2) : fresh.price,
+                        light: fresh.light,
+                        change: fresh.change,
+                    };
+                } catch (e) {
+                    return stock; // 网络失败保留原资料
+                }
+            }));
+
+            listEl.innerHTML = updated.map(stock => {
                 const lightColor = stock.light === 'green' ? 'text-green' : stock.light === 'red' ? 'text-red' : 'text-yellow';
                 const lightEmoji = stock.light === 'green' ? '🟢' : stock.light === 'red' ? '🔴' : '🟡';
                 return `
@@ -441,12 +458,18 @@
                     </div>
                     <div class="flex items-center gap-3">
                         <span class="${lightColor} text-xs font-bold">${lightEmoji}</span>
-                        <span class="text-sm font-bold text-accent">${stock.price}</span>
+                        <div class="text-right">
+                            <span class="text-sm font-bold text-accent">${stock.price}</span>
+                            ${stock.change ? `<span class="text-xs text-gray-500 ml-1">${stock.change}</span>` : ''}
+                        </div>
                         <button onclick="event.stopPropagation(); removeFromMyStocks('${stock.code}')"
                             class="text-gray-600 hover:text-red text-xs ml-1" title="移除">✕</button>
                     </div>
                 </div>`;
             }).join('');
+
+            // 回寫更新後的資料（含最新燈號）
+            localStorage.setItem('myStocks', JSON.stringify(updated));
         }
 
         function removeFromMyStocks(code) {
