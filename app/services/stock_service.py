@@ -5,7 +5,12 @@ import yfinance as yf
 import pandas as pd
 from typing import Optional
 
-from app.services.indicator import calculate_rsi, calculate_kd, calculate_ma
+from app.services.indicator import (
+    calculate_rsi, calculate_kd, calculate_ma, calculate_ema,
+    calculate_macd, calculate_bollinger_bands, calculate_atr,
+    calculate_williams_r, calculate_cci, calculate_obv, calculate_mfi,
+    is_ma_golden_cross, is_ma_death_cross,
+)
 
 
 def fetch_stock_data(code: str, period: str = "3mo") -> Optional[dict]:
@@ -69,13 +74,40 @@ def calculate_indicators(hist: pd.DataFrame) -> dict:
     close = hist['Close']
     high = hist['High']
     low = hist['Low']
-    
+    volume = hist['Volume']
+
     rsi = calculate_rsi(close, period=14)
     k, d = calculate_kd(close, high, low, n=9, m1=3, m2=3)
     ma5 = calculate_ma(close, 5)
     ma20 = calculate_ma(close, 20)
     ma60 = calculate_ma(close, 60) if len(close) >= 60 else None
-    
+    ma120 = calculate_ma(close, 120) if len(close) >= 120 else None
+
+    # MACD (12, 26, 9)
+    macd_dif, macd_dea, macd_hist = calculate_macd(close, fast=12, slow=26, signal=9)
+
+    # Bollinger Bands (20, 2)
+    bb_upper, bb_middle, bb_lower = calculate_bollinger_bands(close, period=20, k=2)
+
+    # ATR (14)
+    atr = calculate_atr(high, low, close, period=14)
+
+    # Williams %R (14)
+    williams_r = calculate_williams_r(high, low, close, period=14)
+
+    # CCI (14)
+    cci = calculate_cci(high, low, close, period=14)
+
+    # OBV
+    obv = calculate_obv(close, volume)
+
+    # MFI (14)
+    mfi = calculate_mfi(high, low, close, volume, period=14)
+
+    # MA Golden/Death Cross (20 vs 60)
+    ma_cross_20_60_golden = is_ma_golden_cross(close, 20, 60)
+    ma_cross_20_60_death = is_ma_death_cross(close, 20, 60)
+
     return {
         'rsi': round(rsi, 2) if rsi is not None else None,
         'kd_k': round(k, 2) if k is not None else None,
@@ -83,6 +115,20 @@ def calculate_indicators(hist: pd.DataFrame) -> dict:
         'ma5': round(ma5, 2) if ma5 is not None else None,
         'ma20': round(ma20, 2) if ma20 is not None else None,
         'ma60': round(ma60, 2) if ma60 is not None else None,
+        'ma120': round(ma120, 2) if ma120 is not None else None,
+        'macd_dif': macd_dif,
+        'macd_dea': macd_dea,
+        'macd_hist': macd_hist,
+        'bb_upper': bb_upper,
+        'bb_middle': bb_middle,
+        'bb_lower': bb_lower,
+        'atr': atr,
+        'williams_r': williams_r,
+        'cci': cci,
+        'obv': obv,
+        'mfi': mfi,
+        'ma_cross_20_60_golden': ma_cross_20_60_golden,
+        'ma_cross_20_60_death': ma_cross_20_60_death,
     }
 
 

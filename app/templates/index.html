@@ -103,20 +103,117 @@
 
             <div id="indicatorsSection" class="border-t border-dark-border pt-4 mt-4 hidden">
                 <p class="text-sm text-gray-400 mb-3">技術指標</p>
-                <div class="grid grid-cols-3 gap-3">
+
+                <!-- 主要指標（第一列） -->
+                <div class="grid grid-cols-3 gap-3 mb-3">
                     <div class="text-center p-3 rounded-xl" style="background:#1c2128">
                         <div class="text-xs text-gray-400">RSI(14)</div>
                         <div id="rsiValue" class="text-xl font-bold">--</div>
+                        <div id="rsiSignal" class="text-xs mt-1"></div>
                     </div>
                     <div class="text-center p-3 rounded-xl" style="background:#1c2128">
                         <div class="text-xs text-gray-400">KD K值</div>
                         <div id="kdKValue" class="text-xl font-bold">--</div>
+                        <div id="kdSignal" class="text-xs mt-1"></div>
                     </div>
                     <div class="text-center p-3 rounded-xl" style="background:#1c2128">
                         <div class="text-xs text-gray-400">MA20</div>
                         <div id="ma20Value" class="text-xl font-bold">--</div>
                     </div>
                 </div>
+
+                <!-- 次要均線（第二列） -->
+                <div class="grid grid-cols-4 gap-2 mb-3">
+                    <div class="text-center p-2 rounded-xl" style="background:#1c2128">
+                        <div class="text-xs text-gray-400">MA5</div>
+                        <div id="ma5Value" class="text-sm font-bold text-accent">--</div>
+                    </div>
+                    <div class="text-center p-2 rounded-xl" style="background:#1c2128">
+                        <div class="text-xs text-gray-400">MA60</div>
+                        <div id="ma60Value" class="text-sm font-bold text-accent">--</div>
+                    </div>
+                    <div class="text-center p-2 rounded-xl" style="background:#1c2128">
+                        <div class="text-xs text-gray-400">MA120</div>
+                        <div id="ma120Value" class="text-sm font-bold text-accent">--</div>
+                    </div>
+                    <div class="text-center p-2 rounded-xl" style="background:#1c2128">
+                        <div class="text-xs text-gray-400">ATR(14)</div>
+                        <div id="atrValue" class="text-sm font-bold">--</div>
+                    </div>
+                </div>
+
+                <!-- MACD（第三列） -->
+                <div class="rounded-xl p-3 mb-3" style="background:#1c2128">
+                    <div class="text-xs text-gray-400 mb-2">MACD(12,26,9)</div>
+                    <div class="flex items-center gap-4">
+                        <div class="text-center">
+                            <div class="text-xs text-gray-500">DIF</div>
+                            <div id="macdDif" class="text-sm font-bold">--</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-xs text-gray-500">DEA</div>
+                            <div id="macdDea" class="text-sm font-bold">--</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-xs text-gray-500">柱</div>
+                            <div id="macdHist" class="text-sm font-bold">--</div>
+                        </div>
+                        <div id="macdSignal" class="ml-auto text-xs px-2 py-1 rounded"></div>
+                    </div>
+                </div>
+
+                <!-- 波動/動能指標（第四列） -->
+                <div class="grid grid-cols-3 gap-2 mb-3">
+                    <div class="text-center p-2 rounded-xl" style="background:#1c2128">
+                        <div class="text-xs text-gray-400">Williams%R</div>
+                        <div id="williamsRValue" class="text-sm font-bold">--</div>
+                        <div id="williamsRSignal" class="text-xs"></div>
+                    </div>
+                    <div class="text-center p-2 rounded-xl" style="background:#1c2128">
+                        <div class="text-xs text-gray-400">CCI(14)</div>
+                        <div id="cciValue" class="text-sm font-bold">--</div>
+                        <div id="cciSignal" class="text-xs"></div>
+                    </div>
+                    <div class="text-center p-2 rounded-xl" style="background:#1c2128">
+                        <div class="text-xs text-gray-400">MFI(14)</div>
+                        <div id="mfiValue" class="text-sm font-bold">--</div>
+                        <div id="mfiSignal" class="text-xs"></div>
+                    </div>
+                </div>
+
+                <!-- 布林帶（第五列） -->
+                <div class="rounded-xl p-3 mb-3" style="background:#1c2128">
+                    <div class="text-xs text-gray-400 mb-2">布林通道(20,2)</div>
+                    <div class="flex items-center gap-3 text-xs">
+                        <div class="text-center">
+                            <div class="text-gray-500">上軌</div>
+                            <div id="bbUpper" class="font-bold text-red">--</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-gray-500">中軌</div>
+                            <div id="bbMiddle" class="font-bold">--</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-gray-500">下軌</div>
+                            <div id="bbLower" class="font-bold text-green">--</div>
+                        </div>
+                        <div class="ml-auto text-center">
+                            <div class="text-gray-500">MA20偏%</div>
+                            <div id="bbPosition" class="font-bold">--</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- OBV + MA 交叉訊號（第六列） -->
+                <div class="flex items-center gap-3">
+                    <div class="flex-1 text-center p-2 rounded-xl" style="background:#1c2128">
+                        <div class="text-xs text-gray-400">OBV</div>
+                        <div id="obvValue" class="text-sm font-bold text-accent">--</div>
+                    </div>
+                    <div id="maCrossSignal" class="flex-1 text-center p-2 rounded-xl text-xs font-bold"></div>
+                </div>
+
+                <!-- 訊號原因 + 操作建議 -->
                 <div id="reasonText" class="mt-4 p-3 rounded-xl text-sm" style="background:#1c2128">
                     <span class="text-gray-400">訊號原因：</span>
                     <span id="signalReason" class="text-accent">--</span>
@@ -148,6 +245,39 @@
                 <p class="text-xs mt-1">查詢股票後點「★ 加入自選」</p>
             </div>
             <div id="myStocksList" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            </div>
+        </div>
+
+        <!-- ====== 產業類股選取 ====== -->
+        <div class="card rounded-2xl p-5 mb-5">
+            <div class="flex items-center justify-between mb-3">
+                <h2 class="text-base font-bold text-gray-200">🏭 產業類股</h2>
+                <button onclick="loadCategoryStocks()" class="text-xs text-accent hover:underline">🔄 更新</button>
+            </div>
+            <div class="flex flex-wrap gap-2 mb-3" id="categoryButtons">
+                <button onclick="selectCategory('半導體')" class="cat-btn px-3 py-1.5 rounded-full text-sm bg-dark-border text-gray-300 hover:border-accent border border-dark-border transition" data-cat="半導體">💻 半導體</button>
+                <button onclick="selectCategory('IC設計')" class="cat-btn px-3 py-1.5 rounded-full text-sm bg-dark-border text-gray-300 hover:border-accent border border-dark-border transition" data-cat="IC設計">🔲 IC設計</button>
+                <button onclick="selectCategory('電子代工')" class="cat-btn px-3 py-1.5 rounded-full text-sm bg-dark-border text-gray-300 hover:border-accent border border-dark-border transition" data-cat="電子代工">⚙️ 電子代工</button>
+                <button onclick="selectCategory('顯示器')" class="cat-btn px-3 py-1.5 rounded-full text-sm bg-dark-border text-gray-300 hover:border-accent border border-dark-border transition" data-cat="顯示器">🖥️ 顯示器</button>
+                <button onclick="selectCategory('網通')" class="cat-btn px-3 py-1.5 rounded-full text-sm bg-dark-border text-gray-300 hover:border-accent border border-dark-border transition" data-cat="網通">📡 網通</button>
+                <button onclick="selectCategory('IPC')" class="cat-btn px-3 py-1.5 rounded-full text-sm bg-dark-border text-gray-300 hover:border-accent border border-dark-border transition" data-cat="IPC">🖥️ IPC</button>
+                <button onclick="selectCategory('金融')" class="cat-btn px-3 py-1.5 rounded-full text-sm bg-dark-border text-gray-300 hover:border-accent border border-dark-border transition" data-cat="金融">🏦 金融</button>
+                <button onclick="selectCategory('壽險')" class="cat-btn px-3 py-1.5 rounded-full text-sm bg-dark-border text-gray-300 hover:border-accent border border-dark-border transition" data-cat="壽險">🛡️ 壽險</button>
+                <button onclick="selectCategory('鋼鐵')" class="cat-btn px-3 py-1.5 rounded-full text-sm bg-dark-border text-gray-300 hover:border-accent border border-dark-border transition" data-cat="鋼鐵">🔩 鋼鐵</button>
+                <button onclick="selectCategory('塑化')" class="cat-btn px-3 py-1.5 rounded-full text-sm bg-dark-border text-gray-300 hover:border-accent border border-dark-border transition" data-cat="塑化">🧪 塑化</button>
+                <button onclick="selectCategory('紡織')" class="cat-btn px-3 py-1.5 rounded-full text-sm bg-dark-border text-gray-300 hover:border-accent border border-dark-border transition" data-cat="紡織">👕 紡織</button>
+                <button onclick="selectCategory('電動車')" class="cat-btn px-3 py-1.5 rounded-full text-sm bg-dark-border text-gray-300 hover:border-accent border border-dark-border transition" data-cat="電動車">🚗 電動車</button>
+            </div>
+            <div id="categoryLoading" class="text-center py-4 text-gray-500 text-sm hidden">分析中，請稍候...</div>
+            <div id="categoryResult" class="hidden">
+                <div class="flex items-center justify-between mb-2">
+                    <span id="categoryTitle" class="text-sm font-bold text-accent"></span>
+                    <span id="categoryCount" class="text-xs text-gray-500"></span>
+                </div>
+                <div id="categoryStockList" class="grid grid-cols-1 gap-2"></div>
+            </div>
+            <div id="categoryEmpty" class="text-center py-4 text-gray-500 text-sm hidden">
+                此類股目前無符合買進條件的股票
             </div>
         </div>
 
@@ -224,7 +354,7 @@
             }
         }
 
-        // ──── 顯示查詢結果 ────
+        // ──── 顯示查詢結果（含所有技術指標）────
         function displayResult(data) {
             const resultEl = document.getElementById('resultCard');
             const errorResultEl = document.getElementById('errorCard');
@@ -256,14 +386,118 @@
             }
 
             if (data.indicators) {
+                const ind = data.indicators;
                 document.getElementById('indicatorsSection').classList.remove('hidden');
-                document.getElementById('rsiValue').textContent = data.indicators.rsi != null ? data.indicators.rsi.toFixed(1) : '--';
-                document.getElementById('kdKValue').textContent = data.indicators.kd_k != null ? data.indicators.kd_k.toFixed(1) : '--';
-                document.getElementById('ma20Value').textContent = data.indicators.ma20 != null ? data.indicators.ma20.toFixed(1) : '--';
+
+                // 主要指標
+                document.getElementById('rsiValue').textContent = ind.rsi != null ? ind.rsi.toFixed(1) : '--';
+                document.getElementById('kdKValue').textContent = ind.kd_k != null ? ind.kd_k.toFixed(1) : '--';
+                document.getElementById('ma20Value').textContent = ind.ma20 != null ? ind.ma20.toFixed(1) : '--';
+
+                // RSI 信號
+                const rsiEl = document.getElementById('rsiSignal');
+                if (ind.rsi != null) {
+                    if (ind.rsi > 70) { rsiEl.textContent = '⚠️超買'; rsiEl.className = 'text-xs mt-1 text-red'; }
+                    else if (ind.rsi < 30) { rsiEl.textContent = '✨超賣'; rsiEl.className = 'text-xs mt-1 text-green'; }
+                    else { rsiEl.textContent = '中性'; rsiEl.className = 'text-xs mt-1 text-gray-400'; }
+                }
+
+                // KD 信號
+                const kdEl = document.getElementById('kdSignal');
+                if (ind.kd_k != null && ind.kd_d != null) {
+                    if (ind.kd_k > 80) { kdEl.textContent = '高檔'; kdEl.className = 'text-xs mt-1 text-red'; }
+                    else if (ind.kd_k < 20) { kdEl.textContent = '低檔'; kdEl.className = 'text-xs mt-1 text-green'; }
+                    else { kdEl.textContent = '中性'; kdEl.className = 'text-xs mt-1 text-gray-400'; }
+                }
+
+                // 次要均線
+                document.getElementById('ma5Value').textContent = ind.ma5 != null ? ind.ma5.toFixed(1) : '--';
+                document.getElementById('ma60Value').textContent = ind.ma60 != null ? ind.ma60.toFixed(1) : '--';
+                document.getElementById('ma120Value').textContent = ind.ma120 != null ? ind.ma120.toFixed(1) : '--';
+                document.getElementById('atrValue').textContent = ind.atr != null ? ind.atr.toFixed(2) : '--';
+
+                // MACD
+                document.getElementById('macdDif').textContent = ind.macd_dif != null ? ind.macd_dif.toFixed(2) : '--';
+                document.getElementById('macdDea').textContent = ind.macd_dea != null ? ind.macd_dea.toFixed(2) : '--';
+                const histEl = document.getElementById('macdHist');
+                const macdSigEl = document.getElementById('macdSignal');
+                if (ind.macd_hist != null) {
+                    histEl.textContent = ind.macd_hist.toFixed(2);
+                    histEl.className = ind.macd_hist >= 0 ? 'text-sm font-bold text-green' : 'text-sm font-bold text-red';
+                    if (ind.macd_hist >= 0) {
+                        macdSigEl.textContent = 'MACD 偏多';
+                        macdSigEl.className = 'ml-auto text-xs px-2 py-1 rounded bg-green/20 text-green';
+                    } else {
+                        macdSigEl.textContent = 'MACD 偏空';
+                        macdSigEl.className = 'ml-auto text-xs px-2 py-1 rounded bg-red/20 text-red';
+                    }
+                } else {
+                    histEl.textContent = '--';
+                    macdSigEl.textContent = '';
+                }
+
+                // Williams %R
+                const wrEl = document.getElementById('williamsRValue');
+                const wrSigEl = document.getElementById('williamsRSignal');
+                if (ind.williams_r != null) {
+                    wrEl.textContent = ind.williams_r.toFixed(0);
+                    if (ind.williams_r > -20) { wrSigEl.textContent = '超買'; wrSigEl.className = 'text-xs text-red'; }
+                    else if (ind.williams_r < -80) { wrSigEl.textContent = '超賣'; wrSigEl.className = 'text-xs text-green'; }
+                    else { wrSigEl.textContent = '中性'; wrSigEl.className = 'text-xs text-gray-400'; }
+                } else { wrEl.textContent = '--'; }
+
+                // CCI
+                const cciEl = document.getElementById('cciValue');
+                const cciSigEl = document.getElementById('cciSignal');
+                if (ind.cci != null) {
+                    cciEl.textContent = ind.cci.toFixed(0);
+                    if (ind.cci > 100) { cciSigEl.textContent = '超買'; cciSigEl.className = 'text-xs text-red'; }
+                    else if (ind.cci < -100) { cciSigEl.textContent = '超賣'; cciSigEl.className = 'text-xs text-green'; }
+                    else { cciSigEl.textContent = '中性'; cciSigEl.className = 'text-xs text-gray-400'; }
+                } else { cciEl.textContent = '--'; }
+
+                // MFI
+                const mfiEl = document.getElementById('mfiValue');
+                const mfiSigEl = document.getElementById('mfiSignal');
+                if (ind.mfi != null) {
+                    mfiEl.textContent = ind.mfi.toFixed(0);
+                    if (ind.mfi > 80) { mfiSigEl.textContent = '資金流入'; mfiSigEl.className = 'text-xs text-red'; }
+                    else if (ind.mfi < 20) { mfiSigEl.textContent = '資金流出'; mfiSigEl.className = 'text-xs text-green'; }
+                    else { mfiSigEl.textContent = '中性'; mfiSigEl.className = 'text-xs text-gray-400'; }
+                } else { mfiEl.textContent = '--'; }
+
+                // 布林帶
+                document.getElementById('bbUpper').textContent = ind.bb_upper != null ? ind.bb_upper.toFixed(1) : '--';
+                document.getElementById('bbMiddle').textContent = ind.bb_middle != null ? ind.bb_middle.toFixed(1) : '--';
+                document.getElementById('bbLower').textContent = ind.bb_lower != null ? ind.bb_lower.toFixed(1) : '--';
+                const bbPosEl = document.getElementById('bbPosition');
+                if (ind.bb_upper != null && ind.bb_lower != null && ind.bb_upper !== ind.bb_lower) {
+                    const pos = ((data.price - ind.bb_lower) / (ind.bb_upper - ind.bb_lower) * 100).toFixed(0);
+                    bbPosEl.textContent = pos + '%';
+                } else { bbPosEl.textContent = '--'; }
+
+                // OBV
+                document.getElementById('obvValue').textContent = ind.obv != null
+                    ? (ind.obv > 0 ? '+' : '') + (ind.obv / 1000000).toFixed(1) + 'M'
+                    : '--';
+
+                // MA 交叉
+                const maCrossEl = document.getElementById('maCrossSignal');
+                if (ind.ma_cross_20_60_golden && ind.ma_cross_20_60_golden.cross) {
+                    maCrossEl.textContent = '✅ MA20/60 金叉';
+                    maCrossEl.className = 'flex-1 text-center p-2 rounded-xl text-xs font-bold text-green bg-green/10';
+                } else if (ind.ma_cross_20_60_death && ind.ma_cross_20_60_death.cross) {
+                    maCrossEl.textContent = '🚨 MA20/60 死叉';
+                    maCrossEl.className = 'flex-1 text-center p-2 rounded-xl text-xs font-bold text-red bg-red/10';
+                } else {
+                    maCrossEl.textContent = '↔ MA 中性';
+                    maCrossEl.className = 'flex-1 text-center p-2 rounded-xl text-xs text-gray-400';
+                }
+
+                // 訊號原因
                 document.getElementById('signalReason').textContent = data.signal_description || '--';
             }
 
-            // Scroll to result
             resultEl.classList.remove('hidden');
             resultEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
@@ -407,6 +641,83 @@
         function selectStock(code) {
             document.getElementById('stockCode').value = code;
             searchStock();
+        }
+
+        // ──── 產業類股 ────
+        let currentCategory = null;
+
+        function selectCategory(cat) {
+            currentCategory = cat;
+            // Update button styles
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                if (btn.dataset.cat === cat) {
+                    btn.classList.add('border-accent', 'text-accent');
+                    btn.classList.remove('text-gray-300');
+                } else {
+                    btn.classList.remove('border-accent', 'text-accent');
+                    btn.classList.add('text-gray-300');
+                }
+            });
+            loadCategoryStocks();
+        }
+
+        async function loadCategoryStocks() {
+            if (!currentCategory) return;
+            const loadingEl = document.getElementById('categoryLoading');
+            const resultEl = document.getElementById('categoryResult');
+            const emptyEl = document.getElementById('categoryEmpty');
+            const listEl = document.getElementById('categoryStockList');
+
+            loadingEl.classList.remove('hidden');
+            resultEl.classList.add('hidden');
+            emptyEl.classList.add('hidden');
+
+            try {
+                const resp = await fetch(`/api/category/${encodeURIComponent(currentCategory)}?limit=5`);
+                if (!resp.ok) throw new Error('載入失敗');
+                const data = await resp.json();
+                const stocks = data.stocks || [];
+
+                document.getElementById('categoryTitle').textContent = `📊 ${currentCategory} 買進候選（前${stocks.length}檔）`;
+
+                if (stocks.length === 0) {
+                    listEl.innerHTML = '';
+                    emptyEl.classList.remove('hidden');
+                } else {
+                    listEl.innerHTML = stocks.map((stock, idx) => {
+                        const lightColor = stock.light === 'green' ? 'text-green' : stock.light === 'red' ? 'text-red' : 'text-yellow';
+                        const lightEmoji = stock.light === 'green' ? '🟢' : stock.light === 'red' ? '🔴' : '🟡';
+                        const lightText = stock.light === 'green' ? '買進' : stock.light === 'red' ? '賣出' : '觀望';
+                        const rank = idx + 1;
+                        return `
+                        <div class="stock-card rounded-xl p-3 flex items-center justify-between" onclick="selectStock('${stock.code}')">
+                            <div class="flex items-center gap-2">
+                                <span class="w-5 h-5 rounded-full bg-accent/20 text-accent text-xs font-bold flex items-center justify-center">${rank}</span>
+                                <div>
+                                    <span class="text-sm font-bold text-gray-200">${stock.code}</span>
+                                    <span class="text-gray-400 text-xs ml-1">${stock.name}</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="text-right">
+                                    <div class="text-sm font-bold text-accent">${stock.price} 元</div>
+                                    <div class="text-xs text-gray-500">${stock.change || ''}</div>
+                                </div>
+                                <div class="text-center">
+                                    <span class="${lightColor} text-xs font-bold">${lightEmoji}</span>
+                                    <div class="text-xs text-gray-500">${lightText}</div>
+                                </div>
+                            </div>
+                        </div>`;
+                    }).join('');
+                    document.getElementById('categoryCount').textContent = `共 ${stocks.length} 檔`;
+                    resultEl.classList.remove('hidden');
+                }
+            } catch (e) {
+                listEl.innerHTML = `<p class="text-red text-sm text-center py-2">載入失敗：${e.message}</p>`;
+            } finally {
+                loadingEl.classList.add('hidden');
+            }
         }
 
         // ──── 我的自選股（localStorage + 即時報價）─────
