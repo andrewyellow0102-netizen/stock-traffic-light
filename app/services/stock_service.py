@@ -12,18 +12,23 @@ def fetch_stock_data(code: str, period: str = "3mo") -> Optional[dict]:
     """
     Fetch stock data from yfinance.
     Tries .TW (TAIEX) first, then .TWO (OTC).
+    Handles letter-suffix ETF codes like 00981A → 00981A.TW (not 00981.TW).
     Returns dict with price info + raw DataFrame for indicator calculation.
     Returns None if stock not found.
     """
+    import re
+    # Check if code contains letters (mixed alphanumeric like 00981A)
+    has_letters = bool(re.search(r'[A-Za-z]', code))
+
     # Try .TW first, then .TWO
     suffixes = ['.TW', '.TWO']
     ticker = None
     used_suffix = None
 
     for suffix in suffixes:
-        t = yf.Ticker(f"{code}{suffix}")
+        ticker_symbol = f"{code}{suffix}"
+        t = yf.Ticker(ticker_symbol)
         try:
-            # Check if this ticker actually has price data
             h = t.history(period=period, auto_adjust=True, raise_errors=True)
             if h is not None and not h.empty and len(h) >= 5:
                 ticker = t

@@ -135,7 +135,23 @@
             <p id="errorMessage" class="text-gray-300">--</p>
         </div>
 
-        <!-- ====== 燈號股票列表（S lice 3） ====== -->
+        <!-- ====== 自選股列表 ====== -->
+        <div id="myStocksSection" class="card rounded-2xl p-5 mb-5">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-base font-bold text-gray-200">★ 我的自選</h2>
+                <button onclick="clearMyStocks()" id="clearMyStocksBtn"
+                    class="text-xs text-gray-500 hover:text-red transition hidden">清除全部</button>
+            </div>
+            <div id="myStocksEmpty" class="text-center py-6 text-gray-500 text-sm hidden">
+                <div class="text-2xl mb-1">☆</div>
+                <p>尚無自選股票</p>
+                <p class="text-xs mt-1">查詢股票後點「★ 加入自選」</p>
+            </div>
+            <div id="myStocksList" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            </div>
+        </div>
+
+        <!-- ====== 燈號股票列表（Slice 3） ====== -->
         <div id="watchlistSection" class="mt-6">
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-lg font-bold text-gray-200">🔥 熱門股票</h2>
@@ -169,7 +185,7 @@
     </main>
 
     <script>
-        const STOCK_CODE_REGEX = /^\d{4,6}$/;
+        const STOCK_CODE_REGEX = /^[0-9A-Za-z]{4,6}$/;
         let currentFilter = 'all';
         let watchlistData = [];
 
@@ -310,6 +326,7 @@
             myList.unshift({ code, name, price, light });
             localStorage.setItem('myStocks', JSON.stringify(myList));
             showToast('已加入自選 ★', 'green');
+            renderMyStocks();
         }
 
         // ──── 燈號股票列表 ────
@@ -392,9 +409,65 @@
             searchStock();
         }
 
+        // ──── 我的自選股（localStorage）─────
+        function renderMyStocks() {
+            let myList = [];
+            try {
+                myList = JSON.parse(localStorage.getItem('myStocks') || '[]');
+            } catch (e) { myList = []; }
+
+            const listEl = document.getElementById('myStocksList');
+            const emptyEl = document.getElementById('myStocksEmpty');
+            const clearBtn = document.getElementById('clearMyStocksBtn');
+
+            if (myList.length === 0) {
+                listEl.innerHTML = '';
+                emptyEl.classList.remove('hidden');
+                clearBtn.classList.add('hidden');
+                return;
+            }
+
+            emptyEl.classList.add('hidden');
+            clearBtn.classList.remove('hidden');
+
+            listEl.innerHTML = myList.map(stock => {
+                const lightColor = stock.light === 'green' ? 'text-green' : stock.light === 'red' ? 'text-red' : 'text-yellow';
+                const lightEmoji = stock.light === 'green' ? '🟢' : stock.light === 'red' ? '🔴' : '🟡';
+                return `
+                <div class="stock-card rounded-xl p-3 flex items-center justify-between" onclick="selectStock('${stock.code}')">
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm font-bold text-gray-200">${stock.code}</span>
+                        <span class="text-gray-400 text-xs truncate max-w-24">${stock.name}</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="${lightColor} text-xs font-bold">${lightEmoji}</span>
+                        <span class="text-sm font-bold text-accent">${stock.price}</span>
+                        <button onclick="event.stopPropagation(); removeFromMyStocks('${stock.code}')"
+                            class="text-gray-600 hover:text-red text-xs ml-1" title="移除">✕</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function removeFromMyStocks(code) {
+            let myList = JSON.parse(localStorage.getItem('myStocks') || '[]');
+            myList = myList.filter(s => String(s.code) !== String(code));
+            localStorage.setItem('myStocks', JSON.stringify(myList));
+            renderMyStocks();
+            showToast('已移除', 'yellow');
+        }
+
+        function clearMyStocks() {
+            if (!confirm('確定要清除所有自選股？')) return;
+            localStorage.removeItem('myStocks');
+            renderMyStocks();
+            showToast('已清除', 'red');
+        }
+
         // Load watchlist on page load
         document.addEventListener('DOMContentLoaded', () => {
             loadWatchlist();
+            renderMyStocks();
         });
     </script>
 </body>
