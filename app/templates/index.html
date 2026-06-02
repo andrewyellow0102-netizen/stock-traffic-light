@@ -541,7 +541,9 @@
 
             const code = String(codeEl.textContent || '').trim();
             const name = String(nameEl.textContent || '').trim();
-            const price = String(priceEl.textContent || '').trim();
+            // 取數字部分（移除「元」及空白）
+            const priceRaw = String(priceEl.textContent || '').replace(/[^\d.]/g, '');
+            const price = priceRaw || '--';
             const lightText = String(lightEl.textContent || '').trim();
             const light = lightText.includes('🟢') ? 'green' : lightText.includes('🔴') ? 'red' : 'yellow';
 

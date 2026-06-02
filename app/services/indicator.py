@@ -158,29 +158,29 @@ def calculate_mfi(high: pd.Series, low: pd.Series, close: pd.Series,
 def is_ma_golden_cross(close: pd.Series, short_ma_period: int, long_ma_period: int) -> dict:
     """
     Detect MA golden cross: short MA crosses above long MA.
-    Returns dict with signal info.
+    Returns dict with signal info. All values are native Python types.
     """
     if len(close) < long_ma_period + 2:
-        return {"cross": False}
+        return {"cross": False, "short_ma": None, "long_ma": None}
     short_ma = close.ewm(span=short_ma_period, adjust=False).mean()
     long_ma = close.ewm(span=long_ma_period, adjust=False).mean()
-    short_prev = short_ma.iloc[-2]
-    short_curr = short_ma.iloc[-1]
-    long_prev = long_ma.iloc[-2]
-    long_curr = long_ma.iloc[-1]
-    cross = short_prev <= long_prev and short_curr > long_curr
+    short_prev = float(short_ma.iloc[-2])
+    short_curr = float(short_ma.iloc[-1])
+    long_prev = float(long_ma.iloc[-2])
+    long_curr = float(long_ma.iloc[-1])
+    cross = bool(short_prev <= long_prev and short_curr > long_curr)
     return {"cross": cross, "short_ma": round(short_curr, 2), "long_ma": round(long_curr, 2)}
 
 
 def is_ma_death_cross(close: pd.Series, short_ma_period: int, long_ma_period: int) -> dict:
-    """Detect MA death cross: short MA crosses below long MA."""
+    """Detect MA death cross: short MA crosses below long MA. All native Python types."""
     if len(close) < long_ma_period + 2:
-        return {"cross": False}
+        return {"cross": False, "short_ma": None, "long_ma": None}
     short_ma = close.ewm(span=short_ma_period, adjust=False).mean()
     long_ma = close.ewm(span=long_ma_period, adjust=False).mean()
-    short_prev = short_ma.iloc[-2]
-    short_curr = short_ma.iloc[-1]
-    long_prev = long_ma.iloc[-2]
-    long_curr = long_ma.iloc[-1]
-    cross = short_prev >= long_prev and short_curr < long_curr
+    short_prev = float(short_ma.iloc[-2])
+    short_curr = float(short_ma.iloc[-1])
+    long_prev = float(long_ma.iloc[-2])
+    long_curr = float(long_ma.iloc[-1])
+    cross = bool(short_prev >= long_prev and short_curr < long_curr)
     return {"cross": cross, "short_ma": round(short_curr, 2), "long_ma": round(long_curr, 2)}
