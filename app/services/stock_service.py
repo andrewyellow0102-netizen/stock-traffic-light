@@ -42,19 +42,19 @@ def fetch_stock_data(code: str, period: str = "3mo") -> Optional[dict]:
         return None
     
     # Current price
-    current_price = float(hist['Close'].iloc[-1])
-    
+    current_price = round(float(hist['Close'].iloc[-1]), 2)
+
     # Stock name
     try:
         name = ticker.info.get('longName') or ticker.info.get('shortName', code)
     except Exception:
         name = code
-    
+
     # Price change
     prev_price = float(hist['Close'].iloc[-2]) if len(hist) >= 2 else current_price
-    change = current_price - prev_price
-    change_pct = (change / prev_price * 100) if prev_price else 0
-    
+    change = round(current_price - prev_price, 2)
+    change_pct = round((change / prev_price * 100), 2) if prev_price else 0
+
     return {
         'code': code,
         'name': name,
@@ -77,12 +77,12 @@ def calculate_indicators(hist: pd.DataFrame) -> dict:
     ma60 = calculate_ma(close, 60) if len(close) >= 60 else None
     
     return {
-        'rsi': rsi,
-        'kd_k': k,
-        'kd_d': d,
-        'ma5': ma5,
-        'ma20': ma20,
-        'ma60': ma60,
+        'rsi': round(rsi, 2) if rsi is not None else None,
+        'kd_k': round(k, 2) if k is not None else None,
+        'kd_d': round(d, 2) if d is not None else None,
+        'ma5': round(ma5, 2) if ma5 is not None else None,
+        'ma20': round(ma20, 2) if ma20 is not None else None,
+        'ma60': round(ma60, 2) if ma60 is not None else None,
     }
 
 
