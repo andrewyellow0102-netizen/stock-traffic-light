@@ -11,7 +11,7 @@
                 extend: {
                     colors: {
                         dark: { bg: '#0d1117', card: '#161b22', border: '#30363d' },
-                        green: '#00c853', yellow: '#ffab00', red: '#ff1744',
+                        green: '#ff1744', yellow: '#ffab00', red: '#00c853',
                         accent: '#00e676',
                     }
                 }
@@ -20,9 +20,9 @@
     </script>
     <style>
         body { background-color: #0d1117; color: #e6edf3; font-family: 'Segoe UI', sans-serif; }
-        .light-green { box-shadow: 0 0 20px rgba(0, 200, 83, 0.5); }
+        .light-green { box-shadow: 0 0 20px rgba(255, 23, 68, 0.5); }
         .light-yellow { box-shadow: 0 0 20px rgba(255, 171, 0, 0.5); }
-        .light-red { box-shadow: 0 0 20px rgba(255, 23, 68, 0.5); }
+        .light-red { box-shadow: 0 0 20px rgba(0, 200, 83, 0.5); }
         .ticker-input:focus { outline: none; box-shadow: 0 0 0 2px #00e676; }
         .ticker-input { background: #161b22; border: 2px solid #30363d; color: #e6edf3; }
         .ticker-input::placeholder { color: #6e7681; }
@@ -38,9 +38,9 @@
         .fade-in { animation: fadeIn 0.3s ease-in; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
         .light-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
-        .light-dot.green { background: #00c853; box-shadow: 0 0 6px rgba(0,200,83,0.8); }
+        .light-dot.green { background: #ff1744; box-shadow: 0 0 6px rgba(255,23,68,0.8); }
         .light-dot.yellow { background: #ffab00; box-shadow: 0 0 6px rgba(255,171,0,0.8); }
-        .light-dot.red { background: #ff1744; box-shadow: 0 0 6px rgba(255,23,68,0.8); }
+        .light-dot.red { background: #00c853; box-shadow: 0 0 6px rgba(0,200,83,0.8); }
     </style>
 </head>
 <body class="min-h-screen">
