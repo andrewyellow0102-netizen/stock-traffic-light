@@ -363,10 +363,19 @@
             const errorResultEl = document.getElementById('errorCard');
             errorResultEl.classList.add('hidden');
 
+            // 根據漲跌設定股價與漲跌額顏色（台股：紅漲綠跌）
+            const isUp = (data.change || '').startsWith('+');
+            const priceColor = isUp ? 'text-green' : 'text-red';
+            const priceChangeColor = isUp ? 'text-green' : 'text-red';
+
             document.getElementById('stockName').textContent = data.name;
             document.getElementById('stockCodeDisplay').textContent = data.code;
-            document.getElementById('stockPrice').textContent = `${fmt(data.price)} 元`;
-            document.getElementById('priceChange').textContent = data.change || '';
+            const stockPriceEl = document.getElementById('stockPrice');
+            stockPriceEl.textContent = `${fmt(data.price)} 元`;
+            stockPriceEl.className = `text-3xl font-bold ${priceColor}`;
+            const priceChangeEl = document.getElementById('priceChange');
+            priceChangeEl.textContent = data.change || '';
+            priceChangeEl.className = `text-sm ${priceChangeColor}`;
 
             const light = data.light;
             const lightEl = document.getElementById('lightIndicator');
@@ -610,6 +619,9 @@
                 const lightEmoji = stock.light === 'green' ? '🟢' : stock.light === 'red' ? '🔴' : '🟡';
                 const lightText = stock.light === 'green' ? '買進' : stock.light === 'red' ? '賣出' : '觀望';
                 const changeText = stock.change || '';
+                const isUp = changeText.startsWith('+');
+                const priceColor = isUp ? 'text-green' : 'text-red';  // 台股：紅漲綠跌
+                const changeColor = isUp ? 'text-green' : 'text-red';
 
                 return `
                 <div class="stock-card rounded-xl p-4" onclick="selectStock('${stock.code}')">
@@ -622,10 +634,10 @@
                     </div>
                     <div class="flex items-end justify-between">
                         <div>
-                            <span class="text-xl font-bold text-accent">${fmt(stock.price)}</span>
+                            <span class="text-xl font-bold ${priceColor}">${fmt(stock.price)}</span>
                             <span class="text-gray-400 text-xs ml-1">元</span>
                         </div>
-                        <span class="text-xs text-gray-500">${changeText}</span>
+                        <span class="text-xs ${changeColor}">${changeText}</span>
                     </div>
                     ${stock.indicators ? `
                     <div class="flex gap-4 mt-2 text-xs text-gray-500">
@@ -694,6 +706,9 @@
                         const lightEmoji = stock.light === 'green' ? '🟢' : stock.light === 'red' ? '🔴' : '🟡';
                         const lightText = stock.light === 'green' ? '買進' : stock.light === 'red' ? '賣出' : '觀望';
                         const rank = idx + 1;
+                        const isUp = (stock.change || '').startsWith('+');
+                        const priceColor = isUp ? 'text-green' : 'text-red';  // 台股：紅漲綠跌
+                        const changeColor = isUp ? 'text-green' : 'text-red';
                         return `
                         <div class="stock-card rounded-xl p-3 flex items-center justify-between" onclick="selectStock('${stock.code}')">
                             <div class="flex items-center gap-2">
@@ -705,8 +720,8 @@
                             </div>
                             <div class="flex items-center gap-3">
                                 <div class="text-right">
-                                    <div class="text-sm font-bold text-accent">${fmt(stock.price)} 元</div>
-                                    <div class="text-xs text-gray-500">${stock.change || ''}</div>
+                                    <div class="text-sm font-bold ${priceColor}">${fmt(stock.price)} 元</div>
+                                    <div class="text-xs ${changeColor}">${stock.change || ''}</div>
                                 </div>
                                 <div class="text-center">
                                     <span class="${lightColor} text-xs font-bold">${lightEmoji}</span>
@@ -766,6 +781,9 @@
             listEl.innerHTML = updated.map(stock => {
                 const lightColor = stock.light === 'green' ? 'text-green' : stock.light === 'red' ? 'text-red' : 'text-yellow';
                 const lightEmoji = stock.light === 'green' ? '🟢' : stock.light === 'red' ? '🔴' : '🟡';
+                const isUp = (stock.change || '').startsWith('+');
+                const priceColor = isUp ? 'text-green' : 'text-red';  // 台股：紅漲綠跌
+                const changeColor = isUp ? 'text-green' : 'text-red';
                 return `
                 <div class="stock-card rounded-xl p-3 flex items-center justify-between" onclick="selectStock('${stock.code}')">
                     <div class="flex items-center gap-2">
@@ -775,8 +793,8 @@
                     <div class="flex items-center gap-3">
                         <span class="${lightColor} text-xs font-bold">${lightEmoji}</span>
                         <div class="text-right">
-                            <span class="text-sm font-bold text-accent">${fmt(stock.price)}</span>
-                            ${stock.change ? `<span class="text-xs text-gray-500 ml-1">${stock.change}</span>` : ''}
+                            <span class="text-sm font-bold ${priceColor}">${fmt(stock.price)}</span>
+                            ${stock.change ? `<span class="text-xs ${changeColor} ml-1">${stock.change}</span>` : ''}
                         </div>
                         <button onclick="event.stopPropagation(); removeFromMyStocks('${stock.code}')"
                             class="text-gray-600 hover:text-red text-xs ml-1" title="移除">✕</button>
