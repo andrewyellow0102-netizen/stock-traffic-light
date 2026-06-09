@@ -617,6 +617,7 @@
                 // 多空趨勢
                 if (ind.trend_position != null) {
                     const tp = ind.trend_position;
+                    const tpStr = typeof tp === 'string' ? tp : (tp.trend || tp);
                     const tpMap = {
                         'strong_uptrend': ['強勢多頭', 'text-green'],
                         'uptrend': ['正常多頭', 'text-accent'],
@@ -625,12 +626,12 @@
                         'downtrend': ['正常空頭', 'text-red'],
                         'strong_downtrend': ['強勢空頭', 'text-red'],
                     };
-                    const [label, cls] = tpMap[tp] || [tp, 'text-gray-400'];
+                    const [label, cls] = tpMap[tpStr] || [tpStr, 'text-gray-400'];
                     const tpVal = document.getElementById('trendPositionValue');
                     tpVal.textContent = label;
                     tpVal.className = `text-sm font-bold ${cls}`;
                     const tpSig = document.getElementById('trendPositionSignal');
-                    tpSig.textContent = tp.includes('up') ? '偏多' : tp.includes('down') ? '偏空' : '中性';
+                    tpSig.textContent = tpStr.includes('up') ? '偏多' : tpStr.includes('down') ? '偏空' : '中性';
                     tpSig.className = `text-xs mt-0.5 ${cls}`;
                 }
             }
