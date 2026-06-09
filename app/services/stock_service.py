@@ -3,64 +3,65 @@ Stock service: fetch data via yfinance and calculate indicators
 """
 import yfinance as yf
 import pandas as pd
-from typing import Optional, List
-from app.services.indicator import calculate_rsi, calculate_kd, calculate_ma
+from typing import Optional
 
-
-# Taiwan stock suffix mapping (yfinance uses .TW for Taiwan)
-TW_SUFFIXES = ['.TW', '.TWO']  # TW = TAIEX, TWO = OTC
-
-
-def _get_ticker(code: str):
-    """Get yfinance ticker, trying .TW then .TWO"""
-    for suffix in TW_SUFFIXES:
-        ticker = yf.Ticker(f"{code}{suffix}")
-        try:
-            # Test if this ticker has data
-            info = ticker.fast_info
-            return ticker
-        except Exception:
-            continue
-    # Fallback: just use .TW
-    return yf.Ticker(f"{code}.TW")
+from app.services.indicator import (
+    calculate_rsi, calculate_kd, calculate_ma, calculate_ema,
+    calculate_macd, calculate_bollinger_bands, calculate_atr,
+    calculate_williams_r, calculate_cci, calculate_obv, calculate_mfi,
+    is_ma_golden_cross, is_ma_death_cross,
+    calculate_volume_ratio, calculate_ma_deviation_pct,
+    calculate_trend_position, calculate_entry_quality,
+)
 
 
 def fetch_stock_data(code: str, period: str = "3mo") -> Optional[dict]:
     """
     Fetch stock data from yfinance.
+    Tries .TW (TAIEX) first, then .TWO (OTC).
+    Handles letter-suffix ETF codes like 00981A → 00981A.TW (not 00981.TW).
     Returns dict with price info + raw DataFrame for indicator calculation.
     Returns None if stock not found.
     """
-    ticker = _get_ticker(code)
-    
-    try:
-        hist = ticker.history(period=period, auto_adjust=True)
-    except Exception:
+    import re
+    # Check if code contains letters (mixed alphanumeric like 00981A)
+    has_letters = bool(re.search(r'[A-Za-z]', code))
+
+    # Try .TW first, then .TWO
+    suffixes = ['.TW', '.TWO']
+    ticker = None
+    used_suffix = None
+
+    for suffix in suffixes:
+        ticker_symbol = f"{code}{suffix}"
+        t = yf.Ticker(ticker_symbol)
+        try:
+            h = t.history(period=period, auto_adjust=True, raise_errors=True)
+            if h is not None and not h.empty and len(h) >= 5:
+                ticker = t
+                used_suffix = suffix
+                hist = h
+                break
+        except Exception:
+            continue
+
+    if ticker is None:
         return None
-    
-    if hist.empty or len(hist) < 30:
-        return None
-    
-    info = {}
-    try:
-        info = ticker.fast_info
-    except Exception:
-        pass
     
     # Current price
-    current_price = float(hist['Close'].iloc[-1])
-    
+    current_price = round(float(hist['Close'].iloc[-1]), 2)
+
     # Stock name
     try:
         name = ticker.info.get('longName') or ticker.info.get('shortName', code)
     except Exception:
         name = code
-    
+
     # Price change
     prev_price = float(hist['Close'].iloc[-2]) if len(hist) >= 2 else current_price
-    change = current_price - prev_price
-    change_pct = (change / prev_price * 100) if prev_price else 0
-    
+    change = round(current_price - prev_price, 2)
+    change_pct = round((change / prev_price * 100), 2) if prev_price else 0
+
     return {
         'code': code,
         'name': name,
@@ -75,20 +76,75 @@ def calculate_indicators(hist: pd.DataFrame) -> dict:
     close = hist['Close']
     high = hist['High']
     low = hist['Low']
-    
+    volume = hist['Volume']
+
     rsi = calculate_rsi(close, period=14)
     k, d = calculate_kd(close, high, low, n=9, m1=3, m2=3)
     ma5 = calculate_ma(close, 5)
     ma20 = calculate_ma(close, 20)
     ma60 = calculate_ma(close, 60) if len(close) >= 60 else None
-    
+    ma120 = calculate_ma(close, 120) if len(close) >= 120 else None
+
+    # MACD (12, 26, 9)
+    macd_dif, macd_dea, macd_hist = calculate_macd(close, fast=12, slow=26, signal=9)
+
+    # Bollinger Bands (20, 2)
+    bb_upper, bb_middle, bb_lower = calculate_bollinger_bands(close, period=20, k=2)
+
+    # ATR (14)
+    atr = calculate_atr(high, low, close, period=14)
+
+    # Williams %R (14)
+    williams_r = calculate_williams_r(high, low, close, period=14)
+
+    # CCI (14)
+    cci = calculate_cci(high, low, close, period=14)
+
+    # OBV
+    obv = calculate_obv(close, volume)
+
+    # MFI (14)
+    mfi = calculate_mfi(high, low, close, volume, period=14)
+
+    # MA Golden/Death Cross (20 vs 60)
+    ma_cross_20_60_golden = is_ma_golden_cross(close, 20, 60)
+    ma_cross_20_60_death = is_ma_death_cross(close, 20, 60)
+
+    # ── 林穎老師方法論新增指標 ──────────────────────
+    # 成交量缺口（今日量 vs 20日均量）
+    volume_ratio = calculate_volume_ratio(volume, period=20)
+
+    # 均線偏離度（股價偏離 MA20 的百分比）
+    ma_deviation = calculate_ma_deviation_pct(close, ma_period=20)
+
+    # 趨勢位置（股價在 MA60 之上/之下，區分6種趨勢強度）
+    trend_position = calculate_trend_position(close, ma_period=60)
+
     return {
-        'rsi': rsi,
-        'kd_k': k,
-        'kd_d': d,
-        'ma5': ma5,
-        'ma20': ma20,
-        'ma60': ma60,
+        'rsi': round(rsi, 2) if rsi is not None else None,
+        'kd_k': round(k, 2) if k is not None else None,
+        'kd_d': round(d, 2) if d is not None else None,
+        'ma5': round(ma5, 2) if ma5 is not None else None,
+        'ma20': round(ma20, 2) if ma20 is not None else None,
+        'ma60': round(ma60, 2) if ma60 is not None else None,
+        'ma120': round(ma120, 2) if ma120 is not None else None,
+        'macd_dif': macd_dif,
+        'macd_dea': macd_dea,
+        'macd_hist': macd_hist,
+        'bb_upper': bb_upper,
+        'bb_middle': bb_middle,
+        'bb_lower': bb_lower,
+        'atr': atr,
+        'williams_r': williams_r,
+        'cci': cci,
+        'obv': obv,
+        'mfi': mfi,
+        'ma_cross_20_60_golden': ma_cross_20_60_golden,
+        'ma_cross_20_60_death': ma_cross_20_60_death,
+        # 林穎老師方法論新增
+        'volume_ratio': volume_ratio,
+        'ma_deviation': ma_deviation,
+        'trend_position': trend_position,
     }
 
 

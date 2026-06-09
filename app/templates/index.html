@@ -11,7 +11,7 @@
                 extend: {
                     colors: {
                         dark: { bg: '#0d1117', card: '#161b22', border: '#30363d' },
-                        green: '#00c853', yellow: '#ffab00', red: '#ff1744',
+                        green: '#ff1744', yellow: '#ffab00', red: '#00c853',
                         accent: '#00e676',
                     }
                 }
@@ -20,25 +20,34 @@
     </script>
     <style>
         body { background-color: #0d1117; color: #e6edf3; font-family: 'Segoe UI', sans-serif; }
-        .light-green { box-shadow: 0 0 20px rgba(0, 200, 83, 0.5); }
+        .light-green { box-shadow: 0 0 20px rgba(255, 23, 68, 0.5); }
         .light-yellow { box-shadow: 0 0 20px rgba(255, 171, 0, 0.5); }
-        .light-red { box-shadow: 0 0 20px rgba(255, 23, 68, 0.5); }
+        .light-red { box-shadow: 0 0 20px rgba(0, 200, 83, 0.5); }
         .ticker-input:focus { outline: none; box-shadow: 0 0 0 2px #00e676; }
         .ticker-input { background: #161b22; border: 2px solid #30363d; color: #e6edf3; }
         .ticker-input::placeholder { color: #6e7681; }
         .card { background: #161b22; border: 1px solid #30363d; }
         .btn-accent { background: #00e676; color: #0d1117; font-weight: 700; }
         .btn-accent:hover { background: #00d060; }
+        .filter-btn { background: #21262d; color: #8b949e; border: 1px solid #30363d; transition: all 0.2s; }
+        .filter-btn:hover { border-color: #00e676; color: #e6edf3; }
+        .filter-btn.active { background: #00e676; color: #0d1117; border-color: #00e676; font-weight: 700; }
+        .stock-card { background: #161b22; border: 1px solid #30363d; transition: all 0.2s; cursor: pointer; }
+        .stock-card:hover { border-color: #00e676; transform: translateY(-2px); }
         .hidden { display: none; }
         .fade-in { animation: fadeIn 0.3s ease-in; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .light-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+        .light-dot.green { background: #ff1744; box-shadow: 0 0 6px rgba(255,23,68,0.8); }
+        .light-dot.yellow { background: #ffab00; box-shadow: 0 0 6px rgba(255,171,0,0.8); }
+        .light-dot.red { background: #00c853; box-shadow: 0 0 6px rgba(0,200,83,0.8); }
     </style>
 </head>
 <body class="min-h-screen">
     <!-- Header -->
-    <header class="border-b border-dark-border py-4 px-6">
+    <header class="border-b border-dark-border py-4 px-6 sticky top-0 z-10" style="background:#0d1117ee;backdrop-filter:blur(8px)">
         <div class="max-w-2xl mx-auto flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-accent/20 flex items-center-center justify-center text-2xl">🚦</div>
+            <div class="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center text-2xl">🚦</div>
             <div>
                 <h1 class="text-xl font-bold text-accent">股票紅綠燈</h1>
                 <p class="text-xs text-gray-400">輸入股號，快速判斷進場時機</p>
@@ -46,9 +55,10 @@
         </div>
     </header>
 
-    <main class="max-w-2xl mx-auto px-4 py-8">
+    <main class="max-w-2xl mx-auto px-4 py-6">
+
         <!-- 查詢區 -->
-        <div class="card rounded-2xl p-6 mb-6">
+        <div class="card rounded-2xl p-6 mb-5">
             <label class="block text-sm text-gray-400 mb-2">輸入股號</label>
             <div class="flex gap-3">
                 <input type="text" id="stockCode" placeholder="例如：2330" maxlength="6"
@@ -69,8 +79,7 @@
         </div>
 
         <!-- 結果卡片 -->
-        <div id="resultCard" class="card rounded-2xl p-6 hidden fade-in">
-            <!-- 股票名稱 + 價格 -->
+        <div id="resultCard" class="card rounded-2xl p-6 mb-5 hidden fade-in">
             <div class="flex items-center justify-between mb-4">
                 <div>
                     <span id="stockName" class="text-2xl font-bold">--</span>
@@ -82,9 +91,8 @@
                 </div>
             </div>
 
-            <!-- 燈號 -->
-            <div class="flex items-center justify-center gap-6 my-6">
-                <div id="lightIndicator" class="w-24 h-24 rounded-full bg-dark-border flex items-center justify-center text-4xl transition">
+            <div class="flex items-center justify-center gap-6 my-5">
+                <div id="lightIndicator" class="w-20 h-20 rounded-full bg-dark-border flex items-center justify-center text-3xl transition">
                     ?
                 </div>
                 <div>
@@ -93,26 +101,162 @@
                 </div>
             </div>
 
-            <!-- 技術指標 -->
             <div id="indicatorsSection" class="border-t border-dark-border pt-4 mt-4 hidden">
                 <p class="text-sm text-gray-400 mb-3">技術指標</p>
-                <div class="grid grid-cols-3 gap-4">
+
+                <!-- 主要指標（第一列） -->
+                <div class="grid grid-cols-3 gap-3 mb-3">
                     <div class="text-center p-3 rounded-xl" style="background:#1c2128">
                         <div class="text-xs text-gray-400">RSI(14)</div>
                         <div id="rsiValue" class="text-xl font-bold">--</div>
+                        <div id="rsiSignal" class="text-xs mt-1"></div>
                     </div>
                     <div class="text-center p-3 rounded-xl" style="background:#1c2128">
                         <div class="text-xs text-gray-400">KD K值</div>
                         <div id="kdKValue" class="text-xl font-bold">--</div>
+                        <div id="kdSignal" class="text-xs mt-1"></div>
                     </div>
                     <div class="text-center p-3 rounded-xl" style="background:#1c2128">
                         <div class="text-xs text-gray-400">MA20</div>
                         <div id="ma20Value" class="text-xl font-bold">--</div>
                     </div>
                 </div>
+
+                <!-- 次要均線（第二列） -->
+                <div class="grid grid-cols-4 gap-2 mb-3">
+                    <div class="text-center p-2 rounded-xl" style="background:#1c2128">
+                        <div class="text-xs text-gray-400">MA5</div>
+                        <div id="ma5Value" class="text-sm font-bold text-accent">--</div>
+                    </div>
+                    <div class="text-center p-2 rounded-xl" style="background:#1c2128">
+                        <div class="text-xs text-gray-400">MA60</div>
+                        <div id="ma60Value" class="text-sm font-bold text-accent">--</div>
+                    </div>
+                    <div class="text-center p-2 rounded-xl" style="background:#1c2128">
+                        <div class="text-xs text-gray-400">MA120</div>
+                        <div id="ma120Value" class="text-sm font-bold text-accent">--</div>
+                    </div>
+                    <div class="text-center p-2 rounded-xl" style="background:#1c2128">
+                        <div class="text-xs text-gray-400">ATR(14)</div>
+                        <div id="atrValue" class="text-sm font-bold">--</div>
+                    </div>
+                </div>
+
+                <!-- MACD（第三列） -->
+                <div class="rounded-xl p-3 mb-3" style="background:#1c2128">
+                    <div class="text-xs text-gray-400 mb-2">MACD(12,26,9)</div>
+                    <div class="flex items-center gap-4">
+                        <div class="text-center">
+                            <div class="text-xs text-gray-500">DIF</div>
+                            <div id="macdDif" class="text-sm font-bold">--</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-xs text-gray-500">DEA</div>
+                            <div id="macdDea" class="text-sm font-bold">--</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-xs text-gray-500">柱</div>
+                            <div id="macdHist" class="text-sm font-bold">--</div>
+                        </div>
+                        <div id="macdSignal" class="ml-auto text-xs px-2 py-1 rounded"></div>
+                    </div>
+                </div>
+
+                <!-- 波動/動能指標（第四列） -->
+                <div class="grid grid-cols-3 gap-2 mb-3">
+                    <div class="text-center p-2 rounded-xl" style="background:#1c2128">
+                        <div class="text-xs text-gray-400">Williams%R</div>
+                        <div id="williamsRValue" class="text-sm font-bold">--</div>
+                        <div id="williamsRSignal" class="text-xs"></div>
+                    </div>
+                    <div class="text-center p-2 rounded-xl" style="background:#1c2128">
+                        <div class="text-xs text-gray-400">CCI(14)</div>
+                        <div id="cciValue" class="text-sm font-bold">--</div>
+                        <div id="cciSignal" class="text-xs"></div>
+                    </div>
+                    <div class="text-center p-2 rounded-xl" style="background:#1c2128">
+                        <div class="text-xs text-gray-400">MFI(14)</div>
+                        <div id="mfiValue" class="text-sm font-bold">--</div>
+                        <div id="mfiSignal" class="text-xs"></div>
+                    </div>
+                </div>
+
+                <!-- 布林帶（第五列） -->
+                <div class="rounded-xl p-3 mb-3" style="background:#1c2128">
+                    <div class="text-xs text-gray-400 mb-2">布林通道(20,2)</div>
+                    <div class="flex items-center gap-3 text-xs">
+                        <div class="text-center">
+                            <div class="text-gray-500">上軌</div>
+                            <div id="bbUpper" class="font-bold text-red">--</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-gray-500">中軌</div>
+                            <div id="bbMiddle" class="font-bold">--</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-gray-500">下軌</div>
+                            <div id="bbLower" class="font-bold text-green">--</div>
+                        </div>
+                        <div class="ml-auto text-center">
+                            <div class="text-gray-500">MA20偏%</div>
+                            <div id="bbPosition" class="font-bold">--</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- OBV + MA 交叉訊號（第六列） -->
+                <div class="flex items-center gap-3">
+                    <div class="flex-1 text-center p-2 rounded-xl" style="background:#1c2128">
+                        <div class="text-xs text-gray-400">OBV</div>
+                        <div id="obvValue" class="text-sm font-bold text-accent">--</div>
+                    </div>
+                    <div id="maCrossSignal" class="flex-1 text-center p-2 rounded-xl text-xs font-bold"></div>
+                </div>
+
+                <!-- 訊號原因 + 操作建議 -->
                 <div id="reasonText" class="mt-4 p-3 rounded-xl text-sm" style="background:#1c2128">
                     <span class="text-gray-400">訊號原因：</span>
                     <span id="signalReason" class="text-accent">--</span>
+                </div>
+                <!-- ====== 林穎老師：進場品質評分 ====== -->
+                <div id="entryQualityCard" class="rounded-2xl p-4 mb-4" style="background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid #334155">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs text-gray-400">🌟 林穎老師 · 進場評分</span>
+                        <span id="entryQualityLabel" class="text-xs font-bold px-2 py-0.5 rounded-full"></span>
+                    </div>
+                    <div class="flex items-end gap-3">
+                        <div id="entryQualityScore" class="text-5xl font-black">--</div>
+                        <div class="pb-1">
+                            <div class="text-xs text-gray-500">/ 100</div>
+                            <div id="entryQualityStars" class="text-lg mt-0.5">☆☆☆☆☆</div>
+                        </div>
+                    </div>
+                    <div id="entryQualityReasons" class="mt-3 space-y-1"></div>
+                </div>
+
+                <!-- ====== 林穎老師：新指標列 ====== -->
+                <div class="grid grid-cols-3 gap-2 mb-3">
+                    <div class="text-center p-2 rounded-xl" style="background:#1c2128">
+                        <div class="text-xs text-gray-400">📊 量能缺口</div>
+                        <div id="volumeRatioValue" class="text-sm font-bold">--</div>
+                        <div id="volumeRatioSignal" class="text-xs mt-0.5"></div>
+                    </div>
+                    <div class="text-center p-2 rounded-xl" style="background:#1c2128">
+                        <div class="text-xs text-gray-400">📐 MA20偏離</div>
+                        <div id="maDeviationValue" class="text-sm font-bold">--</div>
+                        <div id="maDeviationSignal" class="text-xs mt-0.5"></div>
+                    </div>
+                    <div class="text-center p-2 rounded-xl" style="background:#1c2128">
+                        <div class="text-xs text-gray-400">📈 多空趨勢</div>
+                        <div id="trendPositionValue" class="text-sm font-bold">--</div>
+                        <div id="trendPositionSignal" class="text-xs mt-0.5"></div>
+                    </div>
+                </div>
+
+                <div class="mt-3 text-center">
+                    <button onclick="addToWatchlist()" class="text-sm text-gray-400 hover:text-accent transition border border-dark-border px-4 py-2 rounded-lg">
+                        ★ 加入自選
+                    </button>
                 </div>
             </div>
         </div>
@@ -123,6 +267,82 @@
             <p id="errorMessage" class="text-gray-300">--</p>
         </div>
 
+        <!-- ====== 自選股列表 ====== -->
+        <div id="myStocksSection" class="card rounded-2xl p-5 mb-5">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-base font-bold text-gray-200">★ 我的自選</h2>
+                <button onclick="clearMyStocks()" id="clearMyStocksBtn"
+                    class="text-xs text-gray-500 hover:text-red transition hidden">清除全部</button>
+            </div>
+            <div id="myStocksEmpty" class="text-center py-6 text-gray-500 text-sm hidden">
+                <div class="text-2xl mb-1">☆</div>
+                <p>尚無自選股票</p>
+                <p class="text-xs mt-1">查詢股票後點「★ 加入自選」</p>
+            </div>
+            <div id="myStocksList" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            </div>
+        </div>
+
+        <!-- ====== 產業類股選取 ====== -->
+        <div class="card rounded-2xl p-5 mb-5">
+            <div class="flex items-center justify-between mb-3">
+                <h2 class="text-base font-bold text-gray-200">🏭 產業類股</h2>
+                <button onclick="loadCategoryStocks()" class="text-xs text-accent hover:underline">🔄 更新</button>
+            </div>
+            <div class="flex flex-wrap gap-2 mb-3" id="categoryButtons">
+                <button onclick="selectCategory('半導體')" class="cat-btn px-3 py-1.5 rounded-full text-sm bg-dark-border text-gray-300 hover:border-accent border border-dark-border transition" data-cat="半導體">💻 半導體</button>
+                <button onclick="selectCategory('IC設計')" class="cat-btn px-3 py-1.5 rounded-full text-sm bg-dark-border text-gray-300 hover:border-accent border border-dark-border transition" data-cat="IC設計">🔲 IC設計</button>
+                <button onclick="selectCategory('電子代工')" class="cat-btn px-3 py-1.5 rounded-full text-sm bg-dark-border text-gray-300 hover:border-accent border border-dark-border transition" data-cat="電子代工">⚙️ 電子代工</button>
+                <button onclick="selectCategory('顯示器')" class="cat-btn px-3 py-1.5 rounded-full text-sm bg-dark-border text-gray-300 hover:border-accent border border-dark-border transition" data-cat="顯示器">🖥️ 顯示器</button>
+                <button onclick="selectCategory('網通')" class="cat-btn px-3 py-1.5 rounded-full text-sm bg-dark-border text-gray-300 hover:border-accent border border-dark-border transition" data-cat="網通">📡 網通</button>
+                <button onclick="selectCategory('IPC')" class="cat-btn px-3 py-1.5 rounded-full text-sm bg-dark-border text-gray-300 hover:border-accent border border-dark-border transition" data-cat="IPC">🖥️ IPC</button>
+                <button onclick="selectCategory('金融')" class="cat-btn px-3 py-1.5 rounded-full text-sm bg-dark-border text-gray-300 hover:border-accent border border-dark-border transition" data-cat="金融">🏦 金融</button>
+                <button onclick="selectCategory('壽險')" class="cat-btn px-3 py-1.5 rounded-full text-sm bg-dark-border text-gray-300 hover:border-accent border border-dark-border transition" data-cat="壽險">🛡️ 壽險</button>
+                <button onclick="selectCategory('鋼鐵')" class="cat-btn px-3 py-1.5 rounded-full text-sm bg-dark-border text-gray-300 hover:border-accent border border-dark-border transition" data-cat="鋼鐵">🔩 鋼鐵</button>
+                <button onclick="selectCategory('塑化')" class="cat-btn px-3 py-1.5 rounded-full text-sm bg-dark-border text-gray-300 hover:border-accent border border-dark-border transition" data-cat="塑化">🧪 塑化</button>
+                <button onclick="selectCategory('紡織')" class="cat-btn px-3 py-1.5 rounded-full text-sm bg-dark-border text-gray-300 hover:border-accent border border-dark-border transition" data-cat="紡織">👕 紡織</button>
+                <button onclick="selectCategory('電動車')" class="cat-btn px-3 py-1.5 rounded-full text-sm bg-dark-border text-gray-300 hover:border-accent border border-dark-border transition" data-cat="電動車">🚗 電動車</button>
+            </div>
+            <div id="categoryLoading" class="text-center py-4 text-gray-500 text-sm hidden">分析中，請稍候...</div>
+            <div id="categoryResult" class="hidden">
+                <div class="flex items-center justify-between mb-2">
+                    <span id="categoryTitle" class="text-sm font-bold text-accent"></span>
+                    <span id="categoryCount" class="text-xs text-gray-500"></span>
+                </div>
+                <div id="categoryStockList" class="grid grid-cols-1 gap-2"></div>
+            </div>
+            <div id="categoryEmpty" class="text-center py-4 text-gray-500 text-sm hidden">
+                此類股目前無符合買進條件的股票
+            </div>
+        </div>
+
+        <!-- ====== 燈號股票列表（Slice 3） ====== -->
+        <div id="watchlistSection" class="mt-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-bold text-gray-200">🔥 熱門股票</h2>
+                <div class="flex gap-2">
+                    <button onclick="setFilter('all')" id="filterAll" class="filter-btn px-4 py-1.5 rounded-full text-sm active">全部</button>
+                    <button onclick="setFilter('green')" id="filterGreen" class="filter-btn px-4 py-1.5 rounded-full text-sm">🟢 買進</button>
+                    <button onclick="setFilter('red')" id="filterRed" class="filter-btn px-4 py-1.5 rounded-full text-sm">🔴 賣出</button>
+                </div>
+            </div>
+
+            <!-- Watchlist loading -->
+            <div id="watchlistLoading" class="text-center py-8 text-gray-500 text-sm">
+                載入中...
+            </div>
+
+            <!-- Stock grid -->
+            <div id="stockGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            </div>
+
+            <!-- Empty state -->
+            <div id="watchlistEmpty" class="text-center py-8 text-gray-500 hidden">
+                <div class="text-3xl mb-2">🔍</div>
+                <p>目前沒有符合條件的股票</p>
+            </div>
+        </div>
+
         <!-- 燈號說明 -->
         <div class="mt-8 text-center text-sm text-gray-500">
             <p>🟢 綠燈 = 買進（超跌/超賣）&nbsp;&nbsp; 🟡 黃燈 = 觀望&nbsp;&nbsp; 🔴 紅燈 = 賣出（超漲/超買）</p>
@@ -130,8 +350,14 @@
     </main>
 
     <script>
-        const STOCK_CODE_REGEX = /^\d{4,6}$/;
+        const STOCK_CODE_REGEX = /^[0-9A-Za-z]{4,6}$/;
+        let currentFilter = 'all';
+        let watchlistData = [];
 
+        // ──── 格式化股價：固定小數點第二位 ────
+        const fmt = (v) => v != null ? Number(v).toFixed(2) : '--';
+
+        // ──── 查詢個股 ────
         async function searchStock() {
             const code = document.getElementById('stockCode').value.trim();
             const errorEl = document.getElementById('inputError');
@@ -147,7 +373,6 @@
             }
             errorEl.classList.add('hidden');
 
-            // Show loading, hide others
             loadingEl.classList.remove('hidden');
             resultEl.classList.add('hidden');
             errorResultEl.classList.add('hidden');
@@ -167,47 +392,251 @@
             }
         }
 
+        // ──── 顯示查詢結果（含所有技術指標）────
         function displayResult(data) {
             const resultEl = document.getElementById('resultCard');
             const errorResultEl = document.getElementById('errorCard');
             errorResultEl.classList.add('hidden');
 
+            // 根據漲跌設定股價與漲跌額顏色（台股：紅漲綠跌）
+            const isUp = (data.change || '').startsWith('+');
+            const priceColor = isUp ? 'text-green' : 'text-red';
+            const priceChangeColor = isUp ? 'text-green' : 'text-red';
+
             document.getElementById('stockName').textContent = data.name;
             document.getElementById('stockCodeDisplay').textContent = data.code;
-            document.getElementById('stockPrice').textContent = `${data.price} 元`;
-            document.getElementById('priceChange').textContent = data.change || '';
+            const stockPriceEl = document.getElementById('stockPrice');
+            stockPriceEl.textContent = `${fmt(data.price)} 元`;
+            stockPriceEl.className = `text-3xl font-bold ${priceColor}`;
+            const priceChangeEl = document.getElementById('priceChange');
+            priceChangeEl.textContent = data.change || '';
+            priceChangeEl.className = `text-sm ${priceChangeColor}`;
 
-            const light = data.light; // 'green' | 'yellow' | 'red'
+            const light = data.light;
             const lightEl = document.getElementById('lightIndicator');
             const lightLabel = document.getElementById('lightLabel');
             const lightDesc = document.getElementById('lightDesc');
 
             lightEl.textContent = light === 'green' ? '🟢' : light === 'yellow' ? '🟡' : '🔴';
-            lightLabel.textContent = light === 'green' ? '買進' : light === 'yellow' ? '觀望' : '賣出';
+            lightLabel.textContent = data.light_label || (light === 'green' ? '買進' : light === 'yellow' ? '觀望' : '賣出');
+            lightDesc.textContent = data.light_description || '';
 
             if (light === 'green') {
-                lightEl.className = 'w-24 h-24 rounded-full bg-green/20 flex items-center justify-center text-4xl light-green';
+                lightEl.className = 'w-20 h-20 rounded-full bg-green/20 flex items-center justify-center text-3xl light-green';
                 lightLabel.className = 'text-2xl font-bold text-green';
             } else if (light === 'yellow') {
-                lightEl.className = 'w-24 h-24 rounded-full bg-yellow/20 flex items-center justify-center text-4xl light-yellow';
+                lightEl.className = 'w-20 h-20 rounded-full bg-yellow/20 flex items-center justify-center text-3xl light-yellow';
                 lightLabel.className = 'text-2xl font-bold text-yellow';
             } else {
-                lightEl.className = 'w-24 h-24 rounded-full bg-red/20 flex items-center justify-center text-4xl light-red';
+                lightEl.className = 'w-20 h-20 rounded-full bg-red/20 flex items-center justify-center text-3xl light-red';
                 lightLabel.className = 'text-2xl font-bold text-red';
             }
-            lightDesc.textContent = data.signal_description || '';
 
-            // Indicators
             if (data.indicators) {
+                const ind = data.indicators;
                 document.getElementById('indicatorsSection').classList.remove('hidden');
-                document.getElementById('rsiValue').textContent = data.indicators.rsi?.toFixed(1) || '--';
-                document.getElementById('kdKValue').textContent = data.indicators.kd_k?.toFixed(1) || '--';
-                document.getElementById('ma20Value').textContent = data.indicators.ma20 ? `${data.indicators.ma20.toFixed(1)}` : '--';
+
+                // 主要指標
+                document.getElementById('rsiValue').textContent = ind.rsi != null ? ind.rsi.toFixed(1) : '--';
+                document.getElementById('kdKValue').textContent = ind.kd_k != null ? ind.kd_k.toFixed(1) : '--';
+                document.getElementById('ma20Value').textContent = ind.ma20 != null ? ind.ma20.toFixed(1) : '--';
+
+                // RSI 信號
+                const rsiEl = document.getElementById('rsiSignal');
+                if (ind.rsi != null) {
+                    if (ind.rsi > 70) { rsiEl.textContent = '⚠️超買'; rsiEl.className = 'text-xs mt-1 text-red'; }
+                    else if (ind.rsi < 30) { rsiEl.textContent = '✨超賣'; rsiEl.className = 'text-xs mt-1 text-green'; }
+                    else { rsiEl.textContent = '中性'; rsiEl.className = 'text-xs mt-1 text-gray-400'; }
+                }
+
+                // KD 信號
+                const kdEl = document.getElementById('kdSignal');
+                if (ind.kd_k != null && ind.kd_d != null) {
+                    if (ind.kd_k > 80) { kdEl.textContent = '高檔'; kdEl.className = 'text-xs mt-1 text-red'; }
+                    else if (ind.kd_k < 20) { kdEl.textContent = '低檔'; kdEl.className = 'text-xs mt-1 text-green'; }
+                    else { kdEl.textContent = '中性'; kdEl.className = 'text-xs mt-1 text-gray-400'; }
+                }
+
+                // 次要均線
+                document.getElementById('ma5Value').textContent = ind.ma5 != null ? ind.ma5.toFixed(1) : '--';
+                document.getElementById('ma60Value').textContent = ind.ma60 != null ? ind.ma60.toFixed(1) : '--';
+                document.getElementById('ma120Value').textContent = ind.ma120 != null ? ind.ma120.toFixed(1) : '--';
+                document.getElementById('atrValue').textContent = ind.atr != null ? ind.atr.toFixed(2) : '--';
+
+                // MACD
+                document.getElementById('macdDif').textContent = ind.macd_dif != null ? ind.macd_dif.toFixed(2) : '--';
+                document.getElementById('macdDea').textContent = ind.macd_dea != null ? ind.macd_dea.toFixed(2) : '--';
+                const histEl = document.getElementById('macdHist');
+                const macdSigEl = document.getElementById('macdSignal');
+                if (ind.macd_hist != null) {
+                    histEl.textContent = ind.macd_hist.toFixed(2);
+                    histEl.className = ind.macd_hist >= 0 ? 'text-sm font-bold text-green' : 'text-sm font-bold text-red';
+                    if (ind.macd_hist >= 0) {
+                        macdSigEl.textContent = 'MACD 偏多';
+                        macdSigEl.className = 'ml-auto text-xs px-2 py-1 rounded bg-green/20 text-green';
+                    } else {
+                        macdSigEl.textContent = 'MACD 偏空';
+                        macdSigEl.className = 'ml-auto text-xs px-2 py-1 rounded bg-red/20 text-red';
+                    }
+                } else {
+                    histEl.textContent = '--';
+                    macdSigEl.textContent = '';
+                }
+
+                // Williams %R
+                const wrEl = document.getElementById('williamsRValue');
+                const wrSigEl = document.getElementById('williamsRSignal');
+                if (ind.williams_r != null) {
+                    wrEl.textContent = ind.williams_r.toFixed(0);
+                    if (ind.williams_r > -20) { wrSigEl.textContent = '超買'; wrSigEl.className = 'text-xs text-red'; }
+                    else if (ind.williams_r < -80) { wrSigEl.textContent = '超賣'; wrSigEl.className = 'text-xs text-green'; }
+                    else { wrSigEl.textContent = '中性'; wrSigEl.className = 'text-xs text-gray-400'; }
+                } else { wrEl.textContent = '--'; }
+
+                // CCI
+                const cciEl = document.getElementById('cciValue');
+                const cciSigEl = document.getElementById('cciSignal');
+                if (ind.cci != null) {
+                    cciEl.textContent = ind.cci.toFixed(0);
+                    if (ind.cci > 100) { cciSigEl.textContent = '超買'; cciSigEl.className = 'text-xs text-red'; }
+                    else if (ind.cci < -100) { cciSigEl.textContent = '超賣'; cciSigEl.className = 'text-xs text-green'; }
+                    else { cciSigEl.textContent = '中性'; cciSigEl.className = 'text-xs text-gray-400'; }
+                } else { cciEl.textContent = '--'; }
+
+                // MFI
+                const mfiEl = document.getElementById('mfiValue');
+                const mfiSigEl = document.getElementById('mfiSignal');
+                if (ind.mfi != null) {
+                    mfiEl.textContent = ind.mfi.toFixed(0);
+                    if (ind.mfi > 80) { mfiSigEl.textContent = '資金流入'; mfiSigEl.className = 'text-xs text-red'; }
+                    else if (ind.mfi < 20) { mfiSigEl.textContent = '資金流出'; mfiSigEl.className = 'text-xs text-green'; }
+                    else { mfiSigEl.textContent = '中性'; mfiSigEl.className = 'text-xs text-gray-400'; }
+                } else { mfiEl.textContent = '--'; }
+
+                // 布林帶
+                document.getElementById('bbUpper').textContent = ind.bb_upper != null ? ind.bb_upper.toFixed(1) : '--';
+                document.getElementById('bbMiddle').textContent = ind.bb_middle != null ? ind.bb_middle.toFixed(1) : '--';
+                document.getElementById('bbLower').textContent = ind.bb_lower != null ? ind.bb_lower.toFixed(1) : '--';
+                const bbPosEl = document.getElementById('bbPosition');
+                if (ind.bb_upper != null && ind.bb_lower != null && ind.bb_upper !== ind.bb_lower) {
+                    const pos = ((data.price - ind.bb_lower) / (ind.bb_upper - ind.bb_lower) * 100).toFixed(0);
+                    bbPosEl.textContent = pos + '%';
+                } else { bbPosEl.textContent = '--'; }
+
+                // OBV
+                document.getElementById('obvValue').textContent = ind.obv != null
+                    ? (ind.obv > 0 ? '+' : '') + (ind.obv / 1000000).toFixed(1) + 'M'
+                    : '--';
+
+                // MA 交叉
+                const maCrossEl = document.getElementById('maCrossSignal');
+                if (ind.ma_cross_20_60_golden && ind.ma_cross_20_60_golden.cross) {
+                    maCrossEl.textContent = '✅ MA20/60 金叉';
+                    maCrossEl.className = 'flex-1 text-center p-2 rounded-xl text-xs font-bold text-green bg-green/10';
+                } else if (ind.ma_cross_20_60_death && ind.ma_cross_20_60_death.cross) {
+                    maCrossEl.textContent = '🚨 MA20/60 死叉';
+                    maCrossEl.className = 'flex-1 text-center p-2 rounded-xl text-xs font-bold text-red bg-red/10';
+                } else {
+                    maCrossEl.textContent = '↔ MA 中性';
+                    maCrossEl.className = 'flex-1 text-center p-2 rounded-xl text-xs text-gray-400';
+                }
+
+                // 訊號原因
                 document.getElementById('signalReason').textContent = data.signal_description || '--';
+
+                // ====== 林穎老師：進場品質評分 ======
+                if (data.entry_quality) {
+                    const eq = data.entry_quality;
+                    const score = eq.score;
+
+                    // 分數顯示
+                    document.getElementById('entryQualityScore').textContent = score != null ? score.toFixed(0) : '--';
+
+                    // 等級標籤
+                    const labelEl = document.getElementById('entryQualityLabel');
+                    if (score >= 80) {
+                        labelEl.textContent = '🌟 極佳';
+                        labelEl.className = 'text-xs font-bold px-2 py-0.5 rounded-full bg-green/20 text-green';
+                        document.getElementById('entryQualityScore').className = 'text-5xl font-black text-green';
+                    } else if (score >= 60) {
+                        labelEl.textContent = '✅ 良好';
+                        labelEl.className = 'text-xs font-bold px-2 py-0.5 rounded-full bg-accent/20 text-accent';
+                        document.getElementById('entryQualityScore').className = 'text-5xl font-black text-accent';
+                    } else if (score >= 40) {
+                        labelEl.textContent = '⚠️ 尚可';
+                        labelEl.className = 'text-xs font-bold px-2 py-0.5 rounded-full bg-yellow/20 text-yellow';
+                        document.getElementById('entryQualityScore').className = 'text-5xl font-black text-yellow';
+                    } else {
+                        labelEl.textContent = '❌ 不佳';
+                        labelEl.className = 'text-xs font-bold px-2 py-0.5 rounded-full bg-red/20 text-red';
+                        document.getElementById('entryQualityScore').className = 'text-5xl font-black text-red';
+                    }
+
+                    // 星星
+                    const stars = score >= 90 ? '★★★★★' : score >= 70 ? '★★★★☆' : score >= 50 ? '★★★☆☆' : score >= 30 ? '★★☆☆☆' : '★☆☆☆☆';
+                    document.getElementById('entryQualityStars').textContent = stars;
+
+                    // 原因列表
+                    const reasonsEl = document.getElementById('entryQualityReasons');
+                    if (eq.reasons && eq.reasons.length > 0) {
+                        reasonsEl.innerHTML = eq.reasons.map(r => {
+                            const icon = r.type === 'positive' ? '➕' : r.type === 'negative' ? '➖' : '⚪';
+                            const color = r.type === 'positive' ? 'text-green' : r.type === 'negative' ? 'text-red' : 'text-gray-400';
+                            return `<div class="flex items-center gap-2 text-xs ${color}"><span>${icon}</span><span>${r.reason}</span></div>`;
+                        }).join('');
+                    } else {
+                        reasonsEl.innerHTML = '';
+                    }
+                }
+
+                // ====== 林穎老師：新指標 ======
+                // 量能缺口
+                if (ind.volume_ratio != null) {
+                    const vr = ind.volume_ratio;
+                    document.getElementById('volumeRatioValue').textContent = vr.toFixed(2) + 'x';
+                    const vrSig = document.getElementById('volumeRatioSignal');
+                    if (vr >= 2.0) { vrSig.textContent = '🔥異常放量'; vrSig.className = 'text-xs mt-0.5 text-green'; }
+                    else if (vr >= 1.5) { vrSig.textContent = '溫和放量'; vrSig.className = 'text-xs mt-0.5 text-accent'; }
+                    else if (vr >= 1.0) { vrSig.textContent = '正常量能'; vrSig.className = 'text-xs mt-0.5 text-gray-400'; }
+                    else { vrSig.textContent = '量能萎縮'; vrSig.className = 'text-xs mt-0.5 text-red'; }
+                }
+
+                // MA20 偏離度
+                if (ind.ma_deviation != null) {
+                    const md = ind.ma_deviation;
+                    const mdVal = document.getElementById('maDeviationValue');
+                    const mdSig = document.getElementById('maDeviationSignal');
+                    mdVal.textContent = (md >= 0 ? '+' : '') + md.toFixed(1) + '%';
+                    if (md > 10) { mdVal.className = 'text-sm font-bold text-green'; mdSig.textContent = '正偏離超漲'; mdSig.className = 'text-xs mt-0.5 text-green'; }
+                    else if (md > 3) { mdVal.className = 'text-sm font-bold text-yellow'; mdSig.textContent = '輕正偏離'; mdSig.className = 'text-xs mt-0.5 text-yellow'; }
+                    else if (md < -10) { mdVal.className = 'text-sm font-bold text-red'; mdSig.textContent = '負偏離超跌'; mdSig.className = 'text-xs mt-0.5 text-red'; }
+                    else if (md < -3) { mdVal.className = 'text-sm font-bold text-accent'; mdSig.textContent = '輕負偏離'; mdSig.className = 'text-xs mt-0.5 text-accent'; }
+                    else { mdVal.className = 'text-sm font-bold text-gray-400'; mdSig.textContent = '偏離正常'; mdSig.className = 'text-xs mt-0.5 text-gray-400'; }
+                }
+
+                // 多空趨勢
+                if (ind.trend_position != null) {
+                    const tp = ind.trend_position;
+                    const tpMap = {
+                        'strong_uptrend': ['強勢多頭', 'text-green'],
+                        'uptrend': ['正常多頭', 'text-accent'],
+                        'weak_uptrend': ['微弱多頭', 'text-yellow'],
+                        'weak_downtrend': ['微弱空頭', 'text-orange-400'],
+                        'downtrend': ['正常空頭', 'text-red'],
+                        'strong_downtrend': ['強勢空頭', 'text-red'],
+                    };
+                    const [label, cls] = tpMap[tp] || [tp, 'text-gray-400'];
+                    const tpVal = document.getElementById('trendPositionValue');
+                    tpVal.textContent = label;
+                    tpVal.className = `text-sm font-bold ${cls}`;
+                    const tpSig = document.getElementById('trendPositionSignal');
+                    tpSig.textContent = tp.includes('up') ? '偏多' : tp.includes('down') ? '偏空' : '中性';
+                    tpSig.className = `text-xs mt-0.5 ${cls}`;
+                }
             }
 
             resultEl.classList.remove('hidden');
-            resultEl.classList.add('fade-in');
+            resultEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
 
         function showError(msg) {
@@ -217,6 +646,311 @@
             document.getElementById('errorMessage').textContent = msg;
             errorResultEl.classList.remove('hidden');
         }
+
+        // ──── Toast 通知 ────
+        function showToast(msg, color) {
+            const existing = document.getElementById('toastMsg');
+            if (existing) existing.remove();
+            const toast = document.createElement('div');
+            toast.id = 'toastMsg';
+            toast.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 px-6 py-3 rounded-xl text-white font-bold shadow-lg z-50 text-sm';
+            toast.style.background = color === 'green' ? '#00c853' : color === 'red' ? '#ff1744' : '#ffab00';
+            toast.style.color = '#0d1117';
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2500);
+        }
+
+        // ──── 加入自選 ────
+        function addToWatchlist() {
+            const codeEl = document.getElementById('stockCodeDisplay');
+            const nameEl = document.getElementById('stockName');
+            const priceEl = document.getElementById('stockPrice');
+            const lightEl = document.getElementById('lightIndicator');
+
+            if (!codeEl || !nameEl || !priceEl || !lightEl) {
+                showToast('請先查詢股票', 'red');
+                return;
+            }
+
+            const code = String(codeEl.textContent || '').trim();
+            const name = String(nameEl.textContent || '').trim();
+            // 取數字部分（移除「元」及空白）
+            const priceRaw = String(priceEl.textContent || '').replace(/[^\d.]/g, '');
+            const price = priceRaw || '--';
+            const lightText = String(lightEl.textContent || '').trim();
+            const light = lightText.includes('🟢') ? 'green' : lightText.includes('🔴') ? 'red' : 'yellow';
+
+            if (!code || code === '--') {
+                showToast('請先查詢股票', 'red');
+                return;
+            }
+
+            let myList = [];
+            try {
+                myList = JSON.parse(localStorage.getItem('myStocks') || '[]');
+            } catch (e) { myList = []; }
+
+            if (myList.find(s => String(s.code) === code)) {
+                showToast('已在自選名單中', 'yellow');
+                return;
+            }
+
+            myList.unshift({ code, name, price, light });
+            localStorage.setItem('myStocks', JSON.stringify(myList));
+            showToast('已加入自選 ★', 'green');
+            renderMyStocks();
+        }
+
+        // ──── 燈號股票列表 ────
+        async function loadWatchlist() {
+            const grid = document.getElementById('stockGrid');
+            const loading = document.getElementById('watchlistLoading');
+            const empty = document.getElementById('watchlistEmpty');
+
+            loading.classList.remove('hidden');
+            empty.classList.add('hidden');
+            grid.innerHTML = '';
+
+            try {
+                const resp = await fetch('/api/watchlist');
+                const data = await resp.json();
+                watchlistData = data.stocks || [];
+                renderWatchlist();
+            } catch (e) {
+                grid.innerHTML = `<p class="text-gray-500 col-span-2 text-center py-4">載入失敗：${e.message}</p>`;
+            } finally {
+                loading.classList.add('hidden');
+            }
+        }
+
+        function renderWatchlist() {
+            const grid = document.getElementById('stockGrid');
+            const empty = document.getElementById('watchlistEmpty');
+
+            const filtered = currentFilter === 'all'
+                ? watchlistData
+                : watchlistData.filter(s => s.light === currentFilter);
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '';
+                empty.classList.remove('hidden');
+                return;
+            }
+
+            empty.classList.add('hidden');
+            grid.innerHTML = filtered.map(stock => {
+                const lightColor = stock.light === 'green' ? 'text-green' : stock.light === 'red' ? 'text-red' : 'text-yellow';
+                const lightEmoji = stock.light === 'green' ? '🟢' : stock.light === 'red' ? '🔴' : '🟡';
+                const lightText = stock.light === 'green' ? '買進' : stock.light === 'red' ? '賣出' : '觀望';
+                const changeText = stock.change || '';
+                const isUp = changeText.startsWith('+');
+                const priceColor = isUp ? 'text-green' : 'text-red';  // 台股：紅漲綠跌
+                const changeColor = isUp ? 'text-green' : 'text-red';
+
+                return `
+                <div class="stock-card rounded-xl p-4" onclick="selectStock('${stock.code}')">
+                    <div class="flex items-start justify-between mb-2">
+                        <div>
+                            <span class="font-bold text-gray-200">${stock.code}</span>
+                            <span class="text-gray-400 text-sm ml-2">${stock.name.length > 12 ? stock.name.substring(0, 12) + '...' : stock.name}</span>
+                        </div>
+                        <span class="${lightColor} text-sm font-bold whitespace-nowrap">${lightEmoji} ${lightText}</span>
+                    </div>
+                    <div class="flex items-end justify-between">
+                        <div>
+                            <span class="text-xl font-bold ${priceColor}">${fmt(stock.price)}</span>
+                            <span class="text-gray-400 text-xs ml-1">元</span>
+                        </div>
+                        <span class="text-xs ${changeColor}">${changeText}</span>
+                    </div>
+                    ${stock.indicators ? `
+                    <div class="flex gap-4 mt-2 text-xs text-gray-500">
+                        <span>RSI: ${stock.indicators.rsi != null ? stock.indicators.rsi.toFixed(1) : '--'}</span>
+                        <span>K: ${stock.indicators.kd_k != null ? stock.indicators.kd_k.toFixed(1) : '--'}</span>
+                    </div>` : ''}
+                </div>`;
+            }).join('');
+        }
+
+        function setFilter(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('filter' + filter.charAt(0).toUpperCase() + filter.slice(1)).classList.add('active');
+            renderWatchlist();
+        }
+
+        function selectStock(code) {
+            document.getElementById('stockCode').value = code;
+            searchStock();
+        }
+
+        // ──── 產業類股 ────
+        let currentCategory = null;
+
+        function selectCategory(cat) {
+            currentCategory = cat;
+            // Update button styles
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                if (btn.dataset.cat === cat) {
+                    btn.classList.add('border-accent', 'text-accent');
+                    btn.classList.remove('text-gray-300');
+                } else {
+                    btn.classList.remove('border-accent', 'text-accent');
+                    btn.classList.add('text-gray-300');
+                }
+            });
+            loadCategoryStocks();
+        }
+
+        async function loadCategoryStocks() {
+            if (!currentCategory) return;
+            const loadingEl = document.getElementById('categoryLoading');
+            const resultEl = document.getElementById('categoryResult');
+            const emptyEl = document.getElementById('categoryEmpty');
+            const listEl = document.getElementById('categoryStockList');
+
+            loadingEl.classList.remove('hidden');
+            resultEl.classList.add('hidden');
+            emptyEl.classList.add('hidden');
+
+            try {
+                const resp = await fetch(`/api/category/${encodeURIComponent(currentCategory)}?limit=5`);
+                if (!resp.ok) throw new Error('載入失敗');
+                const data = await resp.json();
+                const stocks = data.stocks || [];
+
+                document.getElementById('categoryTitle').textContent = `📊 ${currentCategory} 買進候選（前${stocks.length}檔）`;
+
+                if (stocks.length === 0) {
+                    listEl.innerHTML = '';
+                    emptyEl.classList.remove('hidden');
+                } else {
+                    listEl.innerHTML = stocks.map((stock, idx) => {
+                        const lightColor = stock.light === 'green' ? 'text-green' : stock.light === 'red' ? 'text-red' : 'text-yellow';
+                        const lightEmoji = stock.light === 'green' ? '🟢' : stock.light === 'red' ? '🔴' : '🟡';
+                        const lightText = stock.light === 'green' ? '買進' : stock.light === 'red' ? '賣出' : '觀望';
+                        const rank = idx + 1;
+                        const isUp = (stock.change || '').startsWith('+');
+                        const priceColor = isUp ? 'text-green' : 'text-red';  // 台股：紅漲綠跌
+                        const changeColor = isUp ? 'text-green' : 'text-red';
+                        return `
+                        <div class="stock-card rounded-xl p-3 flex items-center justify-between" onclick="selectStock('${stock.code}')">
+                            <div class="flex items-center gap-2">
+                                <span class="w-5 h-5 rounded-full bg-accent/20 text-accent text-xs font-bold flex items-center justify-center">${rank}</span>
+                                <div>
+                                    <span class="text-sm font-bold text-gray-200">${stock.code}</span>
+                                    <span class="text-gray-400 text-xs ml-1">${stock.name}</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="text-right">
+                                    <div class="text-sm font-bold ${priceColor}">${fmt(stock.price)} 元</div>
+                                    <div class="text-xs ${changeColor}">${stock.change || ''}</div>
+                                </div>
+                                <div class="text-center">
+                                    <span class="${lightColor} text-xs font-bold">${lightEmoji}</span>
+                                    <div class="text-xs text-gray-500">${lightText}</div>
+                                </div>
+                            </div>
+                        </div>`;
+                    }).join('');
+                    document.getElementById('categoryCount').textContent = `共 ${stocks.length} 檔`;
+                    resultEl.classList.remove('hidden');
+                }
+            } catch (e) {
+                listEl.innerHTML = `<p class="text-red text-sm text-center py-2">載入失敗：${e.message}</p>`;
+            } finally {
+                loadingEl.classList.add('hidden');
+            }
+        }
+
+        // ──── 我的自選股（localStorage + 即時報價）─────
+        async function renderMyStocks() {
+            let myList = [];
+            try {
+                myList = JSON.parse(localStorage.getItem('myStocks') || '[]');
+            } catch (e) { myList = []; }
+
+            const listEl = document.getElementById('myStocksList');
+            const emptyEl = document.getElementById('myStocksEmpty');
+            const clearBtn = document.getElementById('clearMyStocksBtn');
+
+            if (myList.length === 0) {
+                listEl.innerHTML = '';
+                emptyEl.classList.remove('hidden');
+                clearBtn.classList.add('hidden');
+                return;
+            }
+
+            emptyEl.classList.add('hidden');
+            clearBtn.classList.remove('hidden');
+
+            // 即時更新每檔股票的報價
+            const updated = await Promise.all(myList.map(async (stock) => {
+                try {
+                    const resp = await fetch(`/api/stock?code=${stock.code}`);
+                    if (!resp.ok) return stock;
+                    const fresh = await resp.json();
+                    return {
+                        ...stock,
+                        price: typeof fresh.price === 'number' ? fresh.price.toFixed(2) : fresh.price,
+                        light: fresh.light,
+                        change: fresh.change,
+                    };
+                } catch (e) {
+                    return stock; // 网络失败保留原资料
+                }
+            }));
+
+            listEl.innerHTML = updated.map(stock => {
+                const lightColor = stock.light === 'green' ? 'text-green' : stock.light === 'red' ? 'text-red' : 'text-yellow';
+                const lightEmoji = stock.light === 'green' ? '🟢' : stock.light === 'red' ? '🔴' : '🟡';
+                const isUp = (stock.change || '').startsWith('+');
+                const priceColor = isUp ? 'text-green' : 'text-red';  // 台股：紅漲綠跌
+                const changeColor = isUp ? 'text-green' : 'text-red';
+                return `
+                <div class="stock-card rounded-xl p-3 flex items-center justify-between" onclick="selectStock('${stock.code}')">
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm font-bold text-gray-200">${stock.code}</span>
+                        <span class="text-gray-400 text-xs truncate max-w-24">${stock.name}</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="${lightColor} text-xs font-bold">${lightEmoji}</span>
+                        <div class="text-right">
+                            <span class="text-sm font-bold ${priceColor}">${fmt(stock.price)}</span>
+                            ${stock.change ? `<span class="text-xs ${changeColor} ml-1">${stock.change}</span>` : ''}
+                        </div>
+                        <button onclick="event.stopPropagation(); removeFromMyStocks('${stock.code}')"
+                            class="text-gray-600 hover:text-red text-xs ml-1" title="移除">✕</button>
+                    </div>
+                </div>`;
+            }).join('');
+
+            // 回寫更新後的資料（含最新燈號）
+            localStorage.setItem('myStocks', JSON.stringify(updated));
+        }
+
+        function removeFromMyStocks(code) {
+            let myList = JSON.parse(localStorage.getItem('myStocks') || '[]');
+            myList = myList.filter(s => String(s.code) !== String(code));
+            localStorage.setItem('myStocks', JSON.stringify(myList));
+            renderMyStocks();
+            showToast('已移除', 'yellow');
+        }
+
+        function clearMyStocks() {
+            if (!confirm('確定要清除所有自選股？')) return;
+            localStorage.removeItem('myStocks');
+            renderMyStocks();
+            showToast('已清除', 'red');
+        }
+
+        // Load watchlist on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadWatchlist();
+            renderMyStocks();
+        });
     </script>
 </body>
 </html>
