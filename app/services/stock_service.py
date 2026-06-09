@@ -10,6 +10,8 @@ from app.services.indicator import (
     calculate_macd, calculate_bollinger_bands, calculate_atr,
     calculate_williams_r, calculate_cci, calculate_obv, calculate_mfi,
     is_ma_golden_cross, is_ma_death_cross,
+    calculate_volume_ratio, calculate_ma_deviation_pct,
+    calculate_trend_position, calculate_entry_quality,
 )
 
 
@@ -108,6 +110,16 @@ def calculate_indicators(hist: pd.DataFrame) -> dict:
     ma_cross_20_60_golden = is_ma_golden_cross(close, 20, 60)
     ma_cross_20_60_death = is_ma_death_cross(close, 20, 60)
 
+    # ── 林穎老師方法論新增指標 ──────────────────────
+    # 成交量缺口（今日量 vs 20日均量）
+    volume_ratio = calculate_volume_ratio(volume, period=20)
+
+    # 均線偏離度（股價偏離 MA20 的百分比）
+    ma_deviation = calculate_ma_deviation_pct(close, ma_period=20)
+
+    # 趨勢位置（股價在 MA60 之上/之下，區分6種趨勢強度）
+    trend_position = calculate_trend_position(close, ma_period=60)
+
     return {
         'rsi': round(rsi, 2) if rsi is not None else None,
         'kd_k': round(k, 2) if k is not None else None,
@@ -129,6 +141,10 @@ def calculate_indicators(hist: pd.DataFrame) -> dict:
         'mfi': mfi,
         'ma_cross_20_60_golden': ma_cross_20_60_golden,
         'ma_cross_20_60_death': ma_cross_20_60_death,
+        # 林穎老師方法論新增
+        'volume_ratio': volume_ratio,
+        'ma_deviation': ma_deviation,
+        'trend_position': trend_position,
     }
 
 

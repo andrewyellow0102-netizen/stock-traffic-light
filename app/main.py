@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from pathlib import Path
 import asyncio
 
-from app.services.stock_service import fetch_stock_data, calculate_indicators, determine_light
+from app.services.stock_service import fetch_stock_data, calculate_indicators, determine_light, calculate_entry_quality
 
 app = FastAPI(
     title="股票紅綠燈",
@@ -36,7 +36,15 @@ async def get_stock(code: str = Query(..., description="股票代碼（如 2330�
     
     indicators = calculate_indicators(data['hist'])
     light_result = determine_light(data['price'], indicators, data['hist'])
-    
+
+    # 進場品質評分（林穎老師方法論）
+    entry_quality = calculate_entry_quality(
+        price=data['price'],
+        indicators=indicators,
+        volume_ratio=indicators.get('volume_ratio'),
+        ma_deviation=indicators.get('ma_deviation'),
+    )
+
     return JSONResponse({
         "code": data['code'],
         "name": data['name'],
@@ -46,6 +54,7 @@ async def get_stock(code: str = Query(..., description="股票代碼（如 2330�
         "light_label": light_result['label'],
         "light_description": light_result['description'],
         "signal_description": light_result['signal_description'],
+        "entry_quality": entry_quality,
         "indicators": {
             "rsi": indicators.get('rsi'),
             "kd_k": indicators.get('kd_k'),
@@ -67,6 +76,10 @@ async def get_stock(code: str = Query(..., description="股票代碼（如 2330�
             "mfi": indicators.get('mfi'),
             "ma_cross_20_60_golden": indicators.get('ma_cross_20_60_golden'),
             "ma_cross_20_60_death": indicators.get('ma_cross_20_60_death'),
+            # 林穎老師方法論新增
+            "volume_ratio": indicators.get('volume_ratio'),
+            "ma_deviation": indicators.get('ma_deviation'),
+            "trend_position": indicators.get('trend_position'),
         },
     })
 

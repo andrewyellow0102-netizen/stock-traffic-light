@@ -218,6 +218,41 @@
                     <span class="text-gray-400">訊號原因：</span>
                     <span id="signalReason" class="text-accent">--</span>
                 </div>
+                <!-- ====== 林穎老師：進場品質評分 ====== -->
+                <div id="entryQualityCard" class="rounded-2xl p-4 mb-4" style="background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid #334155">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs text-gray-400">🌟 林穎老師 · 進場評分</span>
+                        <span id="entryQualityLabel" class="text-xs font-bold px-2 py-0.5 rounded-full"></span>
+                    </div>
+                    <div class="flex items-end gap-3">
+                        <div id="entryQualityScore" class="text-5xl font-black">--</div>
+                        <div class="pb-1">
+                            <div class="text-xs text-gray-500">/ 100</div>
+                            <div id="entryQualityStars" class="text-lg mt-0.5">☆☆☆☆☆</div>
+                        </div>
+                    </div>
+                    <div id="entryQualityReasons" class="mt-3 space-y-1"></div>
+                </div>
+
+                <!-- ====== 林穎老師：新指標列 ====== -->
+                <div class="grid grid-cols-3 gap-2 mb-3">
+                    <div class="text-center p-2 rounded-xl" style="background:#1c2128">
+                        <div class="text-xs text-gray-400">📊 量能缺口</div>
+                        <div id="volumeRatioValue" class="text-sm font-bold">--</div>
+                        <div id="volumeRatioSignal" class="text-xs mt-0.5"></div>
+                    </div>
+                    <div class="text-center p-2 rounded-xl" style="background:#1c2128">
+                        <div class="text-xs text-gray-400">📐 MA20偏離</div>
+                        <div id="maDeviationValue" class="text-sm font-bold">--</div>
+                        <div id="maDeviationSignal" class="text-xs mt-0.5"></div>
+                    </div>
+                    <div class="text-center p-2 rounded-xl" style="background:#1c2128">
+                        <div class="text-xs text-gray-400">📈 多空趨勢</div>
+                        <div id="trendPositionValue" class="text-sm font-bold">--</div>
+                        <div id="trendPositionSignal" class="text-xs mt-0.5"></div>
+                    </div>
+                </div>
+
                 <div class="mt-3 text-center">
                     <button onclick="addToWatchlist()" class="text-sm text-gray-400 hover:text-accent transition border border-dark-border px-4 py-2 rounded-lg">
                         ★ 加入自選
@@ -508,6 +543,96 @@
 
                 // 訊號原因
                 document.getElementById('signalReason').textContent = data.signal_description || '--';
+
+                // ====== 林穎老師：進場品質評分 ======
+                if (data.entry_quality) {
+                    const eq = data.entry_quality;
+                    const score = eq.score;
+
+                    // 分數顯示
+                    document.getElementById('entryQualityScore').textContent = score != null ? score.toFixed(0) : '--';
+
+                    // 等級標籤
+                    const labelEl = document.getElementById('entryQualityLabel');
+                    if (score >= 80) {
+                        labelEl.textContent = '🌟 極佳';
+                        labelEl.className = 'text-xs font-bold px-2 py-0.5 rounded-full bg-green/20 text-green';
+                        document.getElementById('entryQualityScore').className = 'text-5xl font-black text-green';
+                    } else if (score >= 60) {
+                        labelEl.textContent = '✅ 良好';
+                        labelEl.className = 'text-xs font-bold px-2 py-0.5 rounded-full bg-accent/20 text-accent';
+                        document.getElementById('entryQualityScore').className = 'text-5xl font-black text-accent';
+                    } else if (score >= 40) {
+                        labelEl.textContent = '⚠️ 尚可';
+                        labelEl.className = 'text-xs font-bold px-2 py-0.5 rounded-full bg-yellow/20 text-yellow';
+                        document.getElementById('entryQualityScore').className = 'text-5xl font-black text-yellow';
+                    } else {
+                        labelEl.textContent = '❌ 不佳';
+                        labelEl.className = 'text-xs font-bold px-2 py-0.5 rounded-full bg-red/20 text-red';
+                        document.getElementById('entryQualityScore').className = 'text-5xl font-black text-red';
+                    }
+
+                    // 星星
+                    const stars = score >= 90 ? '★★★★★' : score >= 70 ? '★★★★☆' : score >= 50 ? '★★★☆☆' : score >= 30 ? '★★☆☆☆' : '★☆☆☆☆';
+                    document.getElementById('entryQualityStars').textContent = stars;
+
+                    // 原因列表
+                    const reasonsEl = document.getElementById('entryQualityReasons');
+                    if (eq.reasons && eq.reasons.length > 0) {
+                        reasonsEl.innerHTML = eq.reasons.map(r => {
+                            const icon = r.type === 'positive' ? '➕' : r.type === 'negative' ? '➖' : '⚪';
+                            const color = r.type === 'positive' ? 'text-green' : r.type === 'negative' ? 'text-red' : 'text-gray-400';
+                            return `<div class="flex items-center gap-2 text-xs ${color}"><span>${icon}</span><span>${r.reason}</span></div>`;
+                        }).join('');
+                    } else {
+                        reasonsEl.innerHTML = '';
+                    }
+                }
+
+                // ====== 林穎老師：新指標 ======
+                // 量能缺口
+                if (ind.volume_ratio != null) {
+                    const vr = ind.volume_ratio;
+                    document.getElementById('volumeRatioValue').textContent = vr.toFixed(2) + 'x';
+                    const vrSig = document.getElementById('volumeRatioSignal');
+                    if (vr >= 2.0) { vrSig.textContent = '🔥異常放量'; vrSig.className = 'text-xs mt-0.5 text-green'; }
+                    else if (vr >= 1.5) { vrSig.textContent = '溫和放量'; vrSig.className = 'text-xs mt-0.5 text-accent'; }
+                    else if (vr >= 1.0) { vrSig.textContent = '正常量能'; vrSig.className = 'text-xs mt-0.5 text-gray-400'; }
+                    else { vrSig.textContent = '量能萎縮'; vrSig.className = 'text-xs mt-0.5 text-red'; }
+                }
+
+                // MA20 偏離度
+                if (ind.ma_deviation != null) {
+                    const md = ind.ma_deviation;
+                    const mdVal = document.getElementById('maDeviationValue');
+                    const mdSig = document.getElementById('maDeviationSignal');
+                    mdVal.textContent = (md >= 0 ? '+' : '') + md.toFixed(1) + '%';
+                    if (md > 10) { mdVal.className = 'text-sm font-bold text-green'; mdSig.textContent = '正偏離超漲'; mdSig.className = 'text-xs mt-0.5 text-green'; }
+                    else if (md > 3) { mdVal.className = 'text-sm font-bold text-yellow'; mdSig.textContent = '輕正偏離'; mdSig.className = 'text-xs mt-0.5 text-yellow'; }
+                    else if (md < -10) { mdVal.className = 'text-sm font-bold text-red'; mdSig.textContent = '負偏離超跌'; mdSig.className = 'text-xs mt-0.5 text-red'; }
+                    else if (md < -3) { mdVal.className = 'text-sm font-bold text-accent'; mdSig.textContent = '輕負偏離'; mdSig.className = 'text-xs mt-0.5 text-accent'; }
+                    else { mdVal.className = 'text-sm font-bold text-gray-400'; mdSig.textContent = '偏離正常'; mdSig.className = 'text-xs mt-0.5 text-gray-400'; }
+                }
+
+                // 多空趨勢
+                if (ind.trend_position != null) {
+                    const tp = ind.trend_position;
+                    const tpMap = {
+                        'strong_uptrend': ['強勢多頭', 'text-green'],
+                        'uptrend': ['正常多頭', 'text-accent'],
+                        'weak_uptrend': ['微弱多頭', 'text-yellow'],
+                        'weak_downtrend': ['微弱空頭', 'text-orange-400'],
+                        'downtrend': ['正常空頭', 'text-red'],
+                        'strong_downtrend': ['強勢空頭', 'text-red'],
+                    };
+                    const [label, cls] = tpMap[tp] || [tp, 'text-gray-400'];
+                    const tpVal = document.getElementById('trendPositionValue');
+                    tpVal.textContent = label;
+                    tpVal.className = `text-sm font-bold ${cls}`;
+                    const tpSig = document.getElementById('trendPositionSignal');
+                    tpSig.textContent = tp.includes('up') ? '偏多' : tp.includes('down') ? '偏空' : '中性';
+                    tpSig.className = `text-xs mt-0.5 ${cls}`;
+                }
             }
 
             resultEl.classList.remove('hidden');
